@@ -40,7 +40,7 @@ export const ResetPasswordPage: React.FC = () => {
 
       console.log('ResetPasswordPage: Recovery link detected, waiting for Supabase to process...');
 
-      // FIXED: Give Supabase time to process the hash and establish session
+      // Give Supabase time to process the hash and establish session
       // Try multiple times with delays
       let session = null;
       let attempts = 0;
@@ -62,10 +62,9 @@ export const ResetPasswordPage: React.FC = () => {
         attempts++;
       }
 
-      // FIXED: Clear any previous error before final check
       if (session) {
         console.log('ResetPasswordPage: Valid recovery session detected, user can now reset password');
-        setValidationError(null); // CRITICAL: Clear error state
+        setValidationError(null);
         setIsValidating(false);
       } else {
         console.log('ResetPasswordPage: No valid session found after multiple attempts');
