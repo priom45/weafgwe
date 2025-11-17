@@ -503,13 +503,14 @@ function drawWorkExperience(state: PageState, workExperience: any[], userType: U
 
     const yearText = job.year;
     
-    // MODIFIED: Added isValidField check for job.year and render dates in bold
+    // MODIFIED: Added isValidField check for job.year and render dates in bold, visually aligned with job title
     if (isValidField(yearText)) {
       state.doc.setFont(PDF_CONFIG.fontFamily, 'bold'); // Make dates bold
       state.doc.setFontSize(PDF_CONFIG.fonts.year.size);
       const yearWidth = state.doc.getTextWidth(yearText);
       const yearX = PDF_CONFIG.margins.left + PDF_CONFIG.contentWidth - yearWidth;
-      const yearY = initialYForJob + (PDF_CONFIG.fonts.jobTitle.size * 0.352778 * 0.5);
+      // Slight upward tweak (~0.5mm) so the date visually aligns with the job title text
+      const yearY = initialYForJob - 0.5;
       state.doc.text(yearText, yearX, yearY);
       state.doc.setFont(PDF_CONFIG.fontFamily, 'normal'); // Reset to normal after drawing dates
     }
@@ -582,7 +583,8 @@ function drawEducation(state: PageState, education: any[], PDF_CONFIG: any): num
       state.doc.setFont(PDF_CONFIG.fontFamily, 'bold'); // Ensure year is bold
       const yearWidth = state.doc.getTextWidth(yearText);
       const yearX = PDF_CONFIG.margins.left + PDF_CONFIG.contentWidth - yearWidth; // CORRECTED calculation
-      const yearY = initialYForEdu + (PDF_CONFIG.fonts.jobTitle.size * 0.352778 * 0.5);
+      // Slight upward tweak (~0.5mm) so the date visually aligns with the degree text
+      const yearY = initialYForEdu - 0.5;
       state.doc.text(yearText, yearX, yearY);
       state.doc.setFont(PDF_CONFIG.fontFamily, 'normal'); // Reset font to normal after drawing year
     }
