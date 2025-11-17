@@ -111,6 +111,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           initialLoadProcessed = true;
         }
 
+        // FIXED: Handle PASSWORD_RECOVERY event specifically
+        if (event === 'PASSWORD_RECOVERY' && session?.user) {
+          console.log('AuthContext: PASSWORD_RECOVERY event detected. Session established for password reset.');
+          // Don't set full auth state yet - just acknowledge the recovery session
+          // The user will complete password reset on the reset page
+          setAuthState(prev => ({
+            ...prev,
+            isLoading: false,
+          }));
+          return; // Exit early, don't treat this as full sign-in
+        }
+
         if (event === 'SIGNED_IN' && session?.user) {
           try {
             console.log('AuthContext: SIGNED_IN event. Setting basic user info and fetching full profile...');
@@ -312,4 +324,3 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
