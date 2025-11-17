@@ -39,19 +39,35 @@ export const ResetPasswordPage: React.FC = () => {
         return;
       }
 
-      console.log('ResetPasswordPage: Recovery link detected, giving Supabase time to process...');
+      console.log('ResetPasswordPage: Recovery link detected, giving Supabase more time to process...');
 
-      // Give Supabase's detectSessionInUrl time to process the hash and establish session
-      // This happens automatically via the Supabase client
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // FIXED: Give Supabase more time to process the hash and establish session
+      // Increased from 1500ms to 3000ms for better reliability
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
-      // Now check if we have a valid session
-      const { data: { session }, error } = await supabase.auth.getSession();
+      // Now check if we have a valid session - try multiple times if needed
+      let session = null;
+      let attempts = 0;
+      const maxAttempts = 3;
 
-      console.log('ResetPasswordPage: Session check - session:', session ? 'exists' : 'null', 'error:', error);
+      while (attempts < maxAttempts && !session) {
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        
+        console.log(`ResetPasswordPage: Session check attempt ${attempts + 1} - session:`, currentSession ? 'exists' : 'null', 'error:', error);
+        
+        if (currentSession) {
+          session = currentSession;
+          break;
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
 
-      if (error || !session) {
-        console.log('ResetPasswordPage: No valid session found after waiting');
+      if (!session) {
+        console.log('ResetPasswordPage: No valid session found after multiple attempts');
         setValidationError('Invalid or expired password reset link. Please request a new one.');
         setIsValidating(false);
         return;
@@ -85,6 +101,7 @@ export const ResetPasswordPage: React.FC = () => {
         <div className="bg-white dark:bg-dark-100 rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
           <Loader2 className="w-12 h-12 text-blue-600 dark:text-neon-cyan-400 animate-spin mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-300">Validating your reset link...</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">Please wait a moment</p>
         </div>
       </div>
     );
