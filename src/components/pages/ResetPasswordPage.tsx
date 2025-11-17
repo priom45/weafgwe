@@ -27,7 +27,6 @@ export const ResetPasswordPage: React.FC = () => {
       const hashParams = new URLSearchParams(hash.substring(1));
       const hashType = hashParams.get('type');
       const hashAccessToken = hashParams.get('access_token');
-      const hashRefreshToken = hashParams.get('refresh_token');
 
       console.log('ResetPasswordPage: Hash params - type:', hashType, 'access_token:', hashAccessToken ? 'present' : 'missing');
 
@@ -39,18 +38,18 @@ export const ResetPasswordPage: React.FC = () => {
         return;
       }
 
-      console.log('ResetPasswordPage: Recovery link detected, giving Supabase more time to process...');
+      console.log('ResetPasswordPage: Recovery link detected, waiting for Supabase to process...');
 
-      // FIXED: Give Supabase more time to process the hash and establish session
-      // Increased from 1500ms to 3000ms for better reliability
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // Now check if we have a valid session - try multiple times if needed
+      // FIXED: Give Supabase time to process the hash and establish session
+      // Try multiple times with delays
       let session = null;
       let attempts = 0;
-      const maxAttempts = 3;
+      const maxAttempts = 5;
 
       while (attempts < maxAttempts && !session) {
+        // Wait before each check
+        await new Promise(resolve => setTimeout(resolve, attempts === 0 ? 2000 : 1000));
+        
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
         console.log(`ResetPasswordPage: Session check attempt ${attempts + 1} - session:`, currentSession ? 'exists' : 'null', 'error:', error);
@@ -61,20 +60,18 @@ export const ResetPasswordPage: React.FC = () => {
         }
         
         attempts++;
-        if (attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
       }
 
-      if (!session) {
+      // FIXED: Clear any previous error before final check
+      if (session) {
+        console.log('ResetPasswordPage: Valid recovery session detected, user can now reset password');
+        setValidationError(null); // CRITICAL: Clear error state
+        setIsValidating(false);
+      } else {
         console.log('ResetPasswordPage: No valid session found after multiple attempts');
         setValidationError('Invalid or expired password reset link. Please request a new one.');
         setIsValidating(false);
-        return;
       }
-
-      console.log('ResetPasswordPage: Valid recovery session detected, user can now reset password');
-      setIsValidating(false);
     };
 
     validateResetLink();
