@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Sparkles, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 import { ResetPasswordForm } from '../auth/ResetPasswordForm';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabaseClient';
 
 export const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,41 +17,58 @@ export const ResetPasswordPage: React.FC = () => {
   const logoImage = 'https://res.cloudinary.com/dlkovvlud/image/upload/w_1000,c_fill,ar_1:1,g_auto,r_max,bo_5px_solid_red,b_rgb:262c35/v1751536902/a-modern-logo-design-featuring-primoboos_XhhkS8E_Q5iOwxbAXB4CqQ_HnpCsJn4S1yrhb826jmMDw_nmycqj.jpg';
 
   useEffect(() => {
-    console.log('ResetPasswordPage: Full URL:', window.location.href);
-    console.log('ResetPasswordPage: Pathname:', location.pathname);
-    console.log('ResetPasswordPage: Search:', location.search);
-    console.log('ResetPasswordPage: Hash:', location.hash);
+    const validateResetLink = async () => {
+      console.log('ResetPasswordPage: Full URL:', window.location.href);
+      console.log('ResetPasswordPage: Pathname:', location.pathname);
+      console.log('ResetPasswordPage: Search:', location.search);
+      console.log('ResetPasswordPage: Hash:', location.hash);
 
-    const hash = window.location.hash;
-    const type = searchParams.get('type');
-    const token = searchParams.get('token');
-    const accessToken = searchParams.get('access_token');
-    
-    // Check hash for tokens (Supabase sometimes uses hash fragments)
-    const hashParams = new URLSearchParams(hash.substring(1));
-    const hashType = hashParams.get('type') || hash.includes('type=recovery');
-    const hashAccessToken = hashParams.get('access_token') || hash.includes('access_token');
-    const hashToken = hashParams.get('token');
+      const hash = window.location.hash;
+      const type = searchParams.get('type');
+      const token = searchParams.get('token');
+      const accessToken = searchParams.get('access_token');
+      
+      // Check hash for tokens (Supabase uses hash fragments)
+      const hashParams = new URLSearchParams(hash.substring(1));
+      const hashType = hashParams.get('type');
+      const hashAccessToken = hashParams.get('access_token');
+      const hashToken = hashParams.get('token');
 
-    console.log('ResetPasswordPage: Query params - type:', type, 'token:', token, 'access_token:', accessToken);
-    console.log('ResetPasswordPage: Hash params - type:', hashType, 'token:', hashToken, 'access_token:', hashAccessToken);
+      console.log('ResetPasswordPage: Query params - type:', type, 'token:', token, 'access_token:', accessToken);
+      console.log('ResetPasswordPage: Hash params - type:', hashType, 'token:', hashToken, 'access_token:', hashAccessToken);
 
-    // Check if this is a valid recovery link
-    const isRecoveryLink = 
-      (type === 'recovery' || hashType) && 
-      (token || accessToken || hashToken || hashAccessToken);
+      // Check if this is a recovery link (has the type=recovery parameter)
+      const isRecoveryLink = type === 'recovery' || hashType === 'recovery';
 
-    console.log('ResetPasswordPage: Is recovery link?', isRecoveryLink);
+      if (!isRecoveryLink) {
+        console.log('ResetPasswordPage: No recovery type found in URL');
+        setValidationError('Invalid or expired password reset link. Please request a new one.');
+        setIsValidating(false);
+        return;
+      }
 
-    if (!isRecoveryLink) {
-      console.log('ResetPasswordPage: Invalid recovery link detected');
-      setValidationError('Invalid or expired password reset link. Please request a new one.');
+      console.log('ResetPasswordPage: Recovery type found, waiting for Supabase to process...');
+
+      // Give Supabase time to process the hash and establish session
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Now check if we have a valid session
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      console.log('ResetPasswordPage: Session check - session:', session ? 'exists' : 'null', 'error:', error);
+
+      if (error || !session) {
+        console.log('ResetPasswordPage: No valid session found after waiting');
+        setValidationError('Invalid or expired password reset link. Please request a new one.');
+        setIsValidating(false);
+        return;
+      }
+
+      console.log('ResetPasswordPage: Valid recovery session detected');
       setIsValidating(false);
-      return;
-    }
+    };
 
-    console.log('ResetPasswordPage: Valid recovery link detected');
-    setIsValidating(false);
+    validateResetLink();
   }, [searchParams, location]);
 
   const handleResetSuccess = () => {
