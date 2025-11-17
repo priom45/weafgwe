@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Sparkles, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 import { ResetPasswordForm } from '../auth/ResetPasswordForm';
 import { useAuth } from '../../contexts/AuthContext';
@@ -8,7 +8,6 @@ import { supabase } from '../../lib/supabaseClient';
 export const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
   const { isAuthenticated } = useAuth();
   const [isValidating, setIsValidating] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -20,37 +19,31 @@ export const ResetPasswordPage: React.FC = () => {
     const validateResetLink = async () => {
       console.log('ResetPasswordPage: Full URL:', window.location.href);
       console.log('ResetPasswordPage: Pathname:', location.pathname);
-      console.log('ResetPasswordPage: Search:', location.search);
       console.log('ResetPasswordPage: Hash:', location.hash);
 
       const hash = window.location.hash;
-      const type = searchParams.get('type');
-      const token = searchParams.get('token');
-      const accessToken = searchParams.get('access_token');
       
-      // Check hash for tokens (Supabase uses hash fragments)
+      // Parse hash parameters (Supabase uses hash fragments for recovery)
       const hashParams = new URLSearchParams(hash.substring(1));
       const hashType = hashParams.get('type');
       const hashAccessToken = hashParams.get('access_token');
-      const hashToken = hashParams.get('token');
+      const hashRefreshToken = hashParams.get('refresh_token');
 
-      console.log('ResetPasswordPage: Query params - type:', type, 'token:', token, 'access_token:', accessToken);
-      console.log('ResetPasswordPage: Hash params - type:', hashType, 'token:', hashToken, 'access_token:', hashAccessToken);
+      console.log('ResetPasswordPage: Hash params - type:', hashType, 'access_token:', hashAccessToken ? 'present' : 'missing');
 
-      // Check if this is a recovery link (has the type=recovery parameter)
-      const isRecoveryLink = type === 'recovery' || hashType === 'recovery';
-
-      if (!isRecoveryLink) {
-        console.log('ResetPasswordPage: No recovery type found in URL');
+      // Check if this is a recovery link (has the type=recovery parameter in hash)
+      if (hashType !== 'recovery' || !hashAccessToken) {
+        console.log('ResetPasswordPage: No valid recovery link found in URL hash');
         setValidationError('Invalid or expired password reset link. Please request a new one.');
         setIsValidating(false);
         return;
       }
 
-      console.log('ResetPasswordPage: Recovery type found, waiting for Supabase to process...');
+      console.log('ResetPasswordPage: Recovery link detected, giving Supabase time to process...');
 
-      // Give Supabase time to process the hash and establish session
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Give Supabase's detectSessionInUrl time to process the hash and establish session
+      // This happens automatically via the Supabase client
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Now check if we have a valid session
       const { data: { session }, error } = await supabase.auth.getSession();
@@ -64,12 +57,12 @@ export const ResetPasswordPage: React.FC = () => {
         return;
       }
 
-      console.log('ResetPasswordPage: Valid recovery session detected');
+      console.log('ResetPasswordPage: Valid recovery session detected, user can now reset password');
       setIsValidating(false);
     };
 
     validateResetLink();
-  }, [searchParams, location]);
+  }, [location]);
 
   const handleResetSuccess = () => {
     setResetSuccess(true);
