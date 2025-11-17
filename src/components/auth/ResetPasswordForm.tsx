@@ -37,6 +37,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ onSuccess,
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<ResetPasswordData>({
     resolver: zodResolver(resetPasswordSchema),
@@ -145,15 +146,15 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ onSuccess,
               <div className="flex-1 h-2 bg-gray-200 dark:bg-dark-300 rounded-full overflow-hidden">
                 <div
                   className={`h-full transition-all duration-300 ${getPasswordStrengthColor(
-                    register('password').value || ''
+                    watch('password') || ''
                   )}`}
                   style={{
                     width: `${
-                      ((register('password').value || '').length >= 8 ? 20 : 0) +
-                      (/(?=.*[a-z])/.test(register('password').value || '') ? 20 : 0) +
-                      (/(?=.*[A-Z])/.test(register('password').value || '') ? 20 : 0) +
-                      (/(?=.*\d)/.test(register('password').value || '') ? 20 : 0) +
-                      (/(?=.*[@$!%*?&])/.test(register('password').value || '') ? 20 : 0)
+                      ((watch('password') || '').length >= 8 ? 20 : 0) +
+                      (/(?=.*[a-z])/.test(watch('password') || '') ? 20 : 0) +
+                      (/(?=.*[A-Z])/.test(watch('password') || '') ? 20 : 0) +
+                      (/(?=.*\d)/.test(watch('password') || '') ? 20 : 0) +
+                      (/(?=.*[@$!%*?&])/.test(watch('password') || '') ? 20 : 0)
                     }%`,
                   }}
                 />
@@ -162,18 +163,18 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ onSuccess,
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Password strength: {
                 [
-                  (register('password').value || '').length >= 8,
-                  /(?=.*[a-z])/.test(register('password').value || ''),
-                  /(?=.*[A-Z])/.test(register('password').value || ''),
-                  /(?=.*\d)/.test(register('password').value || ''),
-                  /(?=.*[@$!%*?&])/.test(register('password').value || '')
+                  (watch('password') || '').length >= 8,
+                  /(?=.*[a-z])/.test(watch('password') || ''),
+                  /(?=.*[A-Z])/.test(watch('password') || ''),
+                  /(?=.*\d)/.test(watch('password') || ''),
+                  /(?=.*[@$!%*?&])/.test(watch('password') || '')
                 ].filter(Boolean).length === 5 ? 'Strong' :
                 [
-                  (register('password').value || '').length >= 8,
-                  /(?=.*[a-z])/.test(register('password').value || ''),
-                  /(?=.*[A-Z])/.test(register('password').value || ''),
-                  /(?=.*\d)/.test(register('password').value || ''),
-                  /(?=.*[@$!%*?&])/.test(register('password').value || '')
+                  (watch('password') || '').length >= 8,
+                  /(?=.*[a-z])/.test(watch('password') || ''),
+                  /(?=.*[A-Z])/.test(watch('password') || ''),
+                  /(?=.*\d)/.test(watch('password') || ''),
+                  /(?=.*[@$!%*?&])/.test(watch('password') || '')
                 ].filter(Boolean).length >= 3 ? 'Medium' : 'Weak'
               }
             </p>
