@@ -334,7 +334,6 @@ const handleDiwaliCTAClick = useCallback(() => {
   }
 }, [location.pathname, navigate]);
 
-
   useEffect(() => {
   console.log(
     'App.tsx useEffect: isAuthenticated:',
@@ -344,8 +343,16 @@ const handleDiwaliCTAClick = useCallback(() => {
     'hasSeenProfilePrompt:',
     user?.hasSeenProfilePrompt,
     'isLoadingAuth:',
-    isLoading
+    isLoading,
+    'current path:',
+    location.pathname
   );
+
+  // FIXED: Don't run this logic on the reset-password page
+  if (location.pathname === '/reset-password') {
+    console.log('App.tsx useEffect: On reset-password page, skipping AuthModal/profile logic.');
+    return;
+  }
 
   if (isLoading) {
     console.log('App.tsx useEffect: AuthContext is still loading, deferring AuthModal logic.');
@@ -381,8 +388,7 @@ const handleDiwaliCTAClick = useCallback(() => {
     console.log('App.tsx useEffect: User not authenticated, ensuring AuthModal is closed.');
     setAuthModalInitialView('login');
   }
-}, [isAuthenticated, user, user?.hasSeenProfilePrompt, isLoading, postAuthCallback]);
-
+}, [isAuthenticated, user, user?.hasSeenProfilePrompt, isLoading, postAuthCallback, location.pathname]);
 
   useEffect(() => {
     console.log('App.tsx: showProfileManagement state changed to:', showProfileManagement);
@@ -421,24 +427,25 @@ const handleDiwaliCTAClick = useCallback(() => {
 
   console.log('App.tsx: showPlanSelectionModal state before PlanSelectionModal render:', showPlanSelectionModal);
 
-  // Check if we're in interview mode
+  // Check if we're in interview mode OR reset password mode
   const isInterviewMode = location.pathname.includes('/mock-interview');
+  const isResetPasswordMode = location.pathname === '/reset-password';
 
   return (
     <div className="min-h-screen pb-safe-bottom safe-area bg-white dark:bg-dark-50 transition-colors duration-300">
-      {/* Diwali Banner - Hide in interview mode */}
-      {showDiwaliBanner && !isInterviewMode && <DiwaliOfferBanner onCTAClick={handleDiwaliCTAClick} />}
+      {/* Diwali Banner - Hide in interview mode and reset password mode */}
+      {showDiwaliBanner && !isInterviewMode && !isResetPasswordMode && <DiwaliOfferBanner onCTAClick={handleDiwaliCTAClick} />}
 
       {/* Add padding-top to account for the banner */}
-      <div className={showDiwaliBanner && !isInterviewMode ? 'pt-20 sm:pt-24' : ''}>
+      <div className={showDiwaliBanner && !isInterviewMode && !isResetPasswordMode ? 'pt-20 sm:pt-24' : ''}>
         {showSuccessNotification && (
           <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 p-3 bg-green-500 text-white rounded-lg shadow-lg animate-fade-in-down dark:bg-neon-cyan-500 dark:shadow-neon-cyan">
             {successMessage}
           </div>
         )}
 
-        {/* Hide header when in interview mode */}
-        {!isInterviewMode && (
+        {/* Hide header when in interview mode OR reset password mode */}
+        {!isInterviewMode && !isResetPasswordMode && (
           <Header onMobileMenuToggle={handleMobileMenuToggle} showMobileMenu={showMobileMenu} onShowProfile={handleShowProfile}>
             <Navigation onPageChange={handlePageChange} />
           </Header>
