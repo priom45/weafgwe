@@ -390,7 +390,7 @@ async forgotPassword(email: string): Promise<void> {
   console.log('AuthService: Password reset email sent successfully.');
 }
 
-  async resetPassword(data: ForgotPasswordData): Promise<void> {
+  async resetPassword(newPassword: string): Promise<{ user: User | null; autoLoginSuccess: boolean }> {
     console.log('AuthService: Starting resetPassword...');
     
     // Validate access token from URL first
@@ -401,11 +401,10 @@ async forgotPassword(email: string): Promise<void> {
       throw new Error('Invalid or expired reset link. Please request a new password reset.');
     }
 
-    const passwordValidation = this.validatePasswordStrength(data.newPassword);
+    const passwordValidation = this.validatePasswordStrength(newPassword);
     if (!passwordValidation.isValid) throw new Error(passwordValidation.message!);
-    if (data.newPassword !== data.confirmPassword) throw new Error('Passwords do not match');
 
-    const { error } = await supabase.auth.updateUser({ password: data.newPassword });
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
 
     if (error) {
       console.error('AuthService: updateUser error during password reset:', error);
@@ -413,6 +412,14 @@ async forgotPassword(email: string): Promise<void> {
     }
 
     console.log('AuthService: Password reset successful.');
+    
+    // User is already authenticated after password reset, fetch their profile
+    const user = await this.getCurrentUser();
+    
+    return {
+      user,
+      autoLoginSuccess: !!user
+    };
   }
 
   async verifyEmail(token: string): Promise<void> {
