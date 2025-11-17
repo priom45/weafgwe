@@ -309,39 +309,31 @@ const handleDiwaliCTAClick = useCallback(() => {
   }, []);
 
   useEffect(() => {
-    // Check both hash and search params for password recovery
-    const hash = window.location.hash;
-    const searchParams = new URLSearchParams(window.location.search);
-    const urlType = searchParams.get('type');
-    const accessToken = searchParams.get('access_token');
-    const hashAccessToken = hash.includes('access_token');
+  // Check both hash and search params for password recovery
+  const hash = window.location.hash;
+  const searchParams = new URLSearchParams(window.location.search);
+  const urlType = searchParams.get('type');
+  const accessToken = searchParams.get('access_token');
+  
+  // Parse hash parameters
+  const hashParams = new URLSearchParams(hash.substring(1));
+  const hashType = hashParams.get('type');
+  const hashAccessToken = hashParams.get('access_token');
 
-    // Supabase sends recovery links with query parameters: ?access_token=...&type=recovery
-    // or hash fragments: #access_token=...&type=recovery
-    const isRecoveryLink = (urlType === 'recovery' || hash.includes('type=recovery')) && (accessToken || hashAccessToken);
+  // Supabase sends recovery links with hash fragments: #access_token=...&type=recovery
+  const isRecoveryLink = (urlType === 'recovery' || hashType === 'recovery') && (accessToken || hashAccessToken);
 
-    if (isRecoveryLink && location.pathname !== '/reset-password') {
-      console.log('App.tsx: Detected password recovery link in URL. Redirecting to /reset-password');
-      console.log('App.tsx: Type:', urlType, 'Has access token:', !!(accessToken || hashAccessToken));
+  if (isRecoveryLink && location.pathname !== '/reset-password') {
+    console.log('App.tsx: Detected password recovery link in URL. Redirecting to /reset-password');
+    console.log('App.tsx: Type:', urlType || hashType, 'Has access token:', !!(accessToken || hashAccessToken));
 
-      // Redirect to dedicated reset password page with all URL parameters
-      const fullUrl = window.location.href;
-      const url = new URL(fullUrl);
-      const params = new URLSearchParams(url.search);
+    // IMPORTANT: Keep the hash intact so Supabase can process it
+    // Navigate to reset-password page preserving the hash
+    const fullHash = hash || '';
+    navigate(`/reset-password${fullHash}`, { replace: true });
+  }
+}, [location.pathname, navigate]);
 
-      // If tokens are in hash, extract them
-      if (hash) {
-        const hashParams = new URLSearchParams(hash.substring(1));
-        hashParams.forEach((value, key) => {
-          if (!params.has(key)) {
-            params.set(key, value);
-          }
-        });
-      }
-
-      navigate(`/reset-password?${params.toString()}`, { replace: true });
-    }
-  }, [location.pathname, navigate]);
 
   useEffect(() => {
   console.log(
