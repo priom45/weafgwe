@@ -1,111 +1,87 @@
-// src/components/auth/ForgotPasswordForm.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, AlertCircle, CheckCircle, Loader2, ArrowLeft, Clock, Shield } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { Lock, AlertCircle, CheckCircle, Loader2, Eye, EyeOff } from 'lucide-react';
+import { supabase } from '../../lib/supabaseClient';
 
-const forgotPasswordSchema = z.object({
-  email: z.string().email('Invalid email address'),
+const resetPasswordSchema = z.object({
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string().min(8, 'Password must be at least 8 characters'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
-type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
+type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
 
-interface ForgotPasswordFormProps {
-  onBackToLogin: () => void;
+interface ResetPasswordFormProps {
   onSuccess: () => void;
+  onBackToLogin: () => void;
 }
 
-export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToLogin, onSuccess }) => {
-  const { forgotPassword } = useAuth();
+export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ onSuccess, onBackToLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isRateLimited, setIsRateLimited] = useState(false);
-  const [retryAfter, setRetryAfter] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<ForgotPasswordData>({
-    resolver: zodResolver(forgotPasswordSchema),
+    watch,
+  } = useForm<ResetPasswordData>({
+    resolver: zodResolver(resetPasswordSchema),
   });
 
-  // Countdown effect for rate limit
-  useEffect(() => {
-    if (retryAfter > 0) {
-      const timer = setInterval(() => {
-        setRetryAfter((prev) => {
-          if (prev <= 1) {
-            setIsRateLimited(false);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+  const password = watch('password', '');
 
-      return () => clearInterval(timer);
-    }
-  }, [retryAfter]);
+  const getPasswordStrength = (pwd: string): { strength: number; label: string; color: string } => {
+    let strength = 0;
+    if (pwd.length >= 8) strength++;
+    if (pwd.length >= 12) strength++;
+    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) strength++;
+    if (/\d/.test(pwd)) strength++;
+    if (/[^a-zA-Z0-9]/.test(pwd)) strength++;
 
-  const onSubmit = async (data: ForgotPasswordData) => {
-    if (isRateLimited) {
-      return;
-    }
+    if (strength <= 2) return { strength, label: 'Weak', color: 'bg-red-500' };
+    if (strength <= 3) return { strength, label: 'Fair', color: 'bg-yellow-500' };
+    if (strength <= 4) return { strength, label: 'Good', color: 'bg-blue-500' };
+    return { strength, label: 'Strong', color: 'bg-green-500' };
+  };
 
+  const passwordStrength = password ? getPasswordStrength(password) : null;
+
+  const onSubmit = async (data: ResetPasswordData) => {
     setIsLoading(true);
     setError(null);
-    setSuccessMessage(null);
 
     try {
-      await forgotPassword({ email: data.email });
-      setSuccessMessage('Password reset email sent! Please check your inbox and spam folder.');
-      onSuccess();
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Something went wrong.';
+      console.log('ResetPasswordForm: Attempting to update password...');
 
-      // Check if it's a rate limit error
-      if (errorMessage.includes('Too many password reset attempts')) {
-        setIsRateLimited(true);
-        // Extract minutes from error message
-        const match = errorMessage.match(/(\d+) minute/);
-        if (match) {
-          const minutes = parseInt(match[1]);
-          setRetryAfter(minutes * 60);
-        }
+      const { data: updateData, error: updateError } = await supabase.auth.updateUser({
+        password: data.password
+      });
+
+      if (updateError) {
+        console.error('ResetPasswordForm: Password update error:', updateError);
+        throw updateError;
       }
 
+      console.log('ResetPasswordForm: Password updated successfully', updateData);
+      onSuccess();
+    } catch (err) {
+      console.error('ResetPasswordForm: Error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to reset password. Please try again.';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
     <div className="space-y-6">
-      <div className="text-center mb-6">
-        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">Enter your email to receive a reset link.</p>
-      </div>
-
-      {/* Security info box */}
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-start dark:bg-blue-900/20 dark:border-blue-500/30">
-        <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3 mt-0.5 flex-shrink-0" />
-        <div className="text-sm text-blue-700 dark:text-blue-300">
-          <p className="font-medium mb-1">Secure Password Reset</p>
-          <p className="text-xs text-blue-600 dark:text-blue-400">
-            The reset link will expire in 1 hour. For security, you can only request 3 resets per 15 minutes.
-          </p>
-        </div>
-      </div>
-
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start dark:bg-red-900/20 dark:border-red-500/50">
           <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mr-3 mt-0.5 flex-shrink-0" />
@@ -113,86 +89,133 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackTo
         </div>
       )}
 
-      {isRateLimited && retryAfter > 0 && (
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex items-start dark:bg-yellow-900/20 dark:border-yellow-500/30">
-          <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-3 mt-0.5 flex-shrink-0" />
-          <div className="text-sm">
-            <p className="text-yellow-700 dark:text-yellow-300 font-medium mb-1">Rate limit reached</p>
-            <p className="text-yellow-600 dark:text-yellow-400 text-xs">
-              Please wait {formatTime(retryAfter)} before requesting another reset.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {successMessage && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 flex items-start dark:bg-green-900/20 dark:border-green-500/50">
-          <CheckCircle className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0 text-green-600 dark:text-green-400" />
-          <span className="text-sm font-medium dark:text-green-300">{successMessage}</span>
-        </div>
-      )}
-
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            New Password
+          </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+              <Lock className="h-5 w-5 text-gray-400 dark:text-gray-500" />
             </div>
             <input
-              type="email"
-              {...register('email')}
-              placeholder="you@example.com"
-              className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl transition-all duration-200 text-gray-900 placeholder-gray-400 dark:bg-dark-200 dark:border-dark-300 dark:text-gray-100 dark:placeholder-gray-500 ${
-                errors.email ? 'border-red-300 bg-red-50 dark:border-red-500 dark:bg-red-900/20' : 'border-gray-200 bg-gray-50 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white dark:focus:bg-dark-100'
+              type={showPassword ? 'text' : 'password'}
+              {...register('password')}
+              placeholder="Enter new password"
+              className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-200 text-gray-900 placeholder-gray-400 dark:bg-dark-200 dark:border-dark-300 dark:text-gray-100 dark:placeholder-gray-500 ${
+                errors.password
+                  ? 'border-red-300 bg-red-50 dark:border-red-500 dark:bg-red-900/20'
+                  : 'border-gray-200 bg-gray-50 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white dark:focus:bg-dark-100'
               }`}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+            >
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
           </div>
-          {errors.email && (
+          {errors.password && (
             <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center">
               <AlertCircle className="w-4 h-4 mr-1" />
-              {errors.email.message}
+              {errors.password.message}
+            </p>
+          )}
+          {passwordStrength && !errors.password && (
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Password strength:</span>
+                <span className={`text-xs font-semibold ${
+                  passwordStrength.label === 'Weak' ? 'text-red-600 dark:text-red-400' :
+                  passwordStrength.label === 'Fair' ? 'text-yellow-600 dark:text-yellow-400' :
+                  passwordStrength.label === 'Good' ? 'text-blue-600 dark:text-blue-400' :
+                  'text-green-600 dark:text-green-400'
+                }`}>
+                  {passwordStrength.label}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-dark-300 rounded-full h-2">
+                <div
+                  className={`${passwordStrength.color} h-2 rounded-full transition-all duration-300`}
+                  style={{ width: `${(passwordStrength.strength / 5) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            Confirm New Password
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Lock className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+            </div>
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              {...register('confirmPassword')}
+              placeholder="Confirm new password"
+              className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-200 text-gray-900 placeholder-gray-400 dark:bg-dark-200 dark:border-dark-300 dark:text-gray-100 dark:placeholder-gray-500 ${
+                errors.confirmPassword
+                  ? 'border-red-300 bg-red-50 dark:border-red-500 dark:bg-red-900/20'
+                  : 'border-gray-200 bg-gray-50 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white dark:focus:bg-dark-100'
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+            >
+              {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center">
+              <AlertCircle className="w-4 h-4 mr-1" />
+              {errors.confirmPassword.message}
             </p>
           )}
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading || isRateLimited}
-          className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 flex items-center justify-center space-x-2 ${
-            isLoading || isRateLimited
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 active:scale-[0.98] shadow-lg hover:shadow-xl'
-          }`}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Sending...</span>
-            </>
-          ) : isRateLimited ? (
-            <>
-              <Clock className="w-5 h-5" />
-              <span>Wait {formatTime(retryAfter)}</span>
-            </>
-          ) : (
-            <>
-              <Mail className="w-5 h-5" />
-              <span>Send Reset Link</span>
-            </>
-          )}
-        </button>
+        <div className="space-y-3 pt-2">
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 flex items-center justify-center space-x-2 ${
+              isLoading
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 active:scale-[0.98] shadow-lg hover:shadow-xl'
+            }`}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Resetting Password...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                <span>Reset Password</span>
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={onBackToLogin}
+            className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-dark-200 dark:hover:bg-dark-300 dark:text-gray-300 font-semibold py-3 px-6 rounded-xl transition-colors"
+          >
+            Back to Login
+          </button>
+        </div>
       </form>
 
-      <div className="text-center pt-6 border-t border-gray-100 dark:border-dark-300">
-        <button
-          type="button"
-          onClick={onBackToLogin}
-          className="text-blue-600 hover:text-blue-700 font-medium transition-colors hover:underline flex items-center justify-center mx-auto dark:text-neon-cyan-400 dark:hover:text-neon-cyan-300"
-        >
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Back to Sign In
-        </button>
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl dark:bg-blue-900/20 dark:border-blue-500/30">
+        <p className="text-xs text-blue-700 dark:text-blue-300">
+          <strong>Password Requirements:</strong> At least 8 characters. For better security, use a mix of uppercase, lowercase, numbers, and special characters.
+        </p>
       </div>
     </div>
   );
