@@ -8,11 +8,6 @@ export interface WebinarLearningOutcomes {
   outcomes: string[];
 }
 
-export interface WebinarAgendaItem {
-  time: string;
-  topic: string;
-}
-
 export interface Webinar {
   id: string;
   title: string;
@@ -32,7 +27,6 @@ export interface Webinar {
   learning_outcomes?: WebinarLearningOutcomes;
   target_audience: string[];
   prerequisites: string[];
-  agenda?: WebinarAgendaItem[];
   is_featured: boolean;
   created_by?: string;
   created_at: string;
