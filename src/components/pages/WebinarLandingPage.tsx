@@ -920,7 +920,7 @@ export const WebinarLandingPage: React.FC<WebinarLandingPageProps> = ({ onShowAu
             viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Ready to Ace Your Interview?
+              Ready to Ace Your communication?
             </h2>
             <p className="text-xl text-white/90 mb-8">
               Limited spots available. Secure your seat now!
