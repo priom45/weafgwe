@@ -614,7 +614,7 @@ export const WebinarLandingPage: React.FC<WebinarLandingPageProps> = ({ onShowAu
               What You'll Learn
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
-              Master the skills you need to ace the Accenture campus drive
+              Crack the Cognizant Communication Test with proven AI-based strategies
             </p>
           </motion.div>
 
