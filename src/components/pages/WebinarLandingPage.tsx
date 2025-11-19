@@ -130,23 +130,28 @@ export const WebinarLandingPage: React.FC<WebinarLandingPageProps> = ({ onShowAu
   };
 
   const calculateTimeLeft = () => {
-    if (!webinar) return;
+  if (!webinar) return;
 
-    const scheduledDate = new Date(webinar.scheduled_at);
-    const now = new Date();
-    const difference = scheduledDate.getTime() - now.getTime();
+  const scheduled = new Date(
+    new Date(webinar.scheduled_at).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+  );
 
-    if (difference > 0) {
-      setTimeLeft({
-        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((difference / 1000 / 60) % 60),
-        seconds: Math.floor((difference / 1000) % 60)
-      });
-    } else {
-      setTimeLeft(null);
-    }
-  };
+  const now = new Date();
+
+  const diff = scheduled.getTime() - now.getTime();
+
+  if (diff > 0) {
+    setTimeLeft({
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((diff / (1000 * 60)) % 60),
+      seconds: Math.floor((diff / 1000) % 60),
+    });
+  } else {
+    setTimeLeft(null);
+  }
+};
+
 
   const handleRegisterClick = () => {
     if (!isAuthenticated) {
