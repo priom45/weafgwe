@@ -102,15 +102,28 @@ export const WebinarLandingPage: React.FC<WebinarLandingPageProps> = ({ onShowAu
   const loadWebinarData = async () => {
     try {
       setLoading(true);
-      if (!slug) return;
+      if (!slug) {
+        console.error('No slug provided for webinar');
+        return;
+      }
 
+      console.log('Loading webinar with slug:', slug);
       const webinarData = await webinarService.getWebinarBySlug(slug);
+
+      if (!webinarData) {
+        console.error('Webinar not found with slug:', slug);
+        setWebinar(null);
+        return;
+      }
+
       setWebinar(webinarData);
+      console.log('Webinar loaded successfully:', webinarData.title);
 
       const testimonialsData = await webinarService.getTestimonials(true);
       setTestimonials(testimonialsData.slice(0, 3));
     } catch (error) {
       console.error('Error loading webinar:', error);
+      setWebinar(null);
     } finally {
       setLoading(false);
     }
@@ -425,16 +438,33 @@ export const WebinarLandingPage: React.FC<WebinarLandingPageProps> = ({ onShowAu
 
   if (!webinar) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800">
-        <div className="text-center text-white">
-          <h1 className="text-4xl font-bold mb-4">Webinar Not Found</h1>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 px-4">
+        <motion.div
+          className="text-center text-white max-w-md"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="mb-6">
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Calendar className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold mb-4">Webinar Not Found</h1>
+            <p className="text-white/80 mb-6">
+              The webinar you're looking for doesn't exist or may have been removed.
+              {slug && (
+                <span className="block mt-2 text-sm font-mono bg-white/10 px-3 py-1 rounded">
+                  Slug: {slug}
+                </span>
+              )}
+            </p>
+          </div>
           <button
             onClick={() => navigate('/webinars')}
-            className="px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-colors"
+            className="px-8 py-4 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-all duration-300 font-semibold shadow-xl hover:shadow-2xl hover:scale-105"
           >
-            View All Webinars
+            Browse All Webinars
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -637,6 +667,96 @@ export const WebinarLandingPage: React.FC<WebinarLandingPageProps> = ({ onShowAu
                     <CheckCircle className="w-6 h-6 flex-shrink-0 mt-1" />
                     <span className="text-lg">{outcome}</span>
                   </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {webinar.agenda && webinar.agenda.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mt-16"
+            >
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">Session Breakdown</h3>
+              <div className="space-y-4">
+                {webinar.agenda.map((item, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-start space-x-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-6 hover:shadow-lg transition-shadow"
+                  >
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                        {index + 1}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">{item.time}</span>
+                      </div>
+                      <p className="text-lg font-medium text-gray-900 dark:text-white">{item.topic}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {webinar.prerequisites && webinar.prerequisites.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mt-16"
+            >
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">What You'll Get</h3>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {webinar.prerequisites.map((resource, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  >
+                    <div className="flex items-start space-x-3">
+                      <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" />
+                      <span className="text-lg font-medium text-gray-900 dark:text-white">{resource}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {webinar.target_audience && webinar.target_audience.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mt-16 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-700 rounded-3xl p-12"
+            >
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">Who Should Attend</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                {webinar.target_audience.map((audience, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-center space-x-3 bg-white dark:bg-gray-900 rounded-lg p-4 shadow-md"
+                  >
+                    <Target className="w-6 h-6 text-purple-500 flex-shrink-0" />
+                    <span className="text-lg font-medium text-gray-900 dark:text-white">{audience}</span>
+                  </motion.div>
                 ))}
               </div>
             </motion.div>
