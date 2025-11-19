@@ -18,9 +18,7 @@ import {
   Megaphone,
   AlertCircle,
   Loader2,
-  ArrowLeft,
-  Lock,
-  CreditCard
+  ArrowLeft
 } from 'lucide-react';
 import { webinarService } from '../../services/webinarService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -148,13 +146,12 @@ export const WebinarDetailsPage: React.FC = () => {
     const difference = scheduledDate.getTime() - now.getTime();
 
     if (difference > 0) {
-      const totalSeconds = Math.floor(difference / 1000);
-      const days = Math.floor(totalSeconds / (60 * 60 * 24));
-      const hours = Math.floor((totalSeconds % (60 * 60 * 24)) / (60 * 60));
-      const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
-      const seconds = totalSeconds % 60;
-
-      setTimeLeft({ days, hours, minutes, seconds });
+      setTimeLeft({
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60)
+      });
     } else {
       setTimeLeft(null);
     }
@@ -249,8 +246,11 @@ export const WebinarDetailsPage: React.FC = () => {
   }
 
   const { webinar } = registration;
-  const isPaymentCompleted = registration.payment_status === 'completed' && registration.registration_status === 'confirmed';
-  const shouldShowMeetLink = Boolean(webinar?.meet_link && isPaymentCompleted);
+  const shouldShowMeetLink = Boolean(
+    webinar?.meet_link &&
+    registration.payment_status === 'completed' &&
+    registration.registration_status === 'confirmed'
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 py-8 px-4">
@@ -327,7 +327,7 @@ export const WebinarDetailsPage: React.FC = () => {
                 )}
 
                 {/* Join / Meet Link Button */}
-                {shouldShowMeetLink ? (
+                {(shouldShowMeetLink || isWebinarLive() || isWebinarPast()) && (
                   <a
                     href={webinar.meet_link}
                     target="_blank"
@@ -338,20 +338,6 @@ export const WebinarDetailsPage: React.FC = () => {
                     {isWebinarLive() ? 'Join Webinar Now' : isWebinarPast() ? 'View Recording' : 'Open Meet Link'}
                     <ExternalLink className="w-4 h-4" />
                   </a>
-                ) : (
-                  <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <Lock className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
-                      <div>
-                        <h3 className="font-semibold text-yellow-800 dark:text-yellow-300 mb-1">
-                          Complete Payment to Access Meeting Link
-                        </h3>
-                        <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                          Your registration is pending payment. Complete your payment to receive the meeting link and access all webinar materials.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 )}
 
                 {/* Webinar Info */}
@@ -410,13 +396,13 @@ export const WebinarDetailsPage: React.FC = () => {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Updates</h2>
-                  {isPaymentCompleted && unreadCount > 0 && (
+                  {unreadCount > 0 && (
                     <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
                       {unreadCount} New
                     </span>
                   )}
                 </div>
-                {isPaymentCompleted && unreadCount > 0 && (
+                {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllAsRead}
                     className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
@@ -427,17 +413,7 @@ export const WebinarDetailsPage: React.FC = () => {
                 )}
               </div>
 
-              {!isPaymentCompleted ? (
-                <div className="text-center py-12">
-                  <Lock className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                    Updates Locked
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">
-                    Complete payment to view webinar updates and announcements
-                  </p>
-                </div>
-              ) : updates.length === 0 ? (
+              {updates.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
                   <Bell className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>No updates yet. Check back later for announcements!</p>
@@ -507,82 +483,52 @@ export const WebinarDetailsPage: React.FC = () => {
               </div>
 
               <div className="space-y-4 text-gray-800 dark:text-gray-200">
-                {isPaymentCompleted ? (
-                  <>
-                    <div>
-                      <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-1">
-                        <User className="w-4 h-4" />
-                        <span className="text-sm font-medium">Name</span>
-                      </div>
-                      <p className="text-gray-900 dark:text-gray-100 ml-6">{registration.full_name}</p>
-                    </div>
+                <div>
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-1">
+                    <User className="w-4 h-4" />
+                    <span className="text-sm font-medium">Name</span>
+                  </div>
+                  <p className="text-gray-900 dark:text-gray-100 ml-6">{registration.full_name}</p>
+                </div>
 
-                    <div>
-                      <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-1">
-                        <Mail className="w-4 h-4" />
-                        <span className="text-sm font-medium">Email</span>
-                      </div>
-                      <p className="text-gray-900 dark:text-gray-100 ml-6">{registration.email}</p>
-                    </div>
+                <div>
+                  <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-1">
+                    <Mail className="w-4 h-4" />
+                    <span className="text-sm font-medium">Email</span>
+                  </div>
+                  <p className="text-gray-900 dark:text-gray-100 ml-6">{registration.email}</p>
+                </div>
 
-                    {registration.college_name && (
-                      <div>
-                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-1">
-                          <GraduationCap className="w-4 h-4" />
-                          <span className="text-sm font-medium">College</span>
-                        </div>
-                        <p className="text-gray-900 dark:text-gray-100 ml-6">{registration.college_name}</p>
-                      </div>
-                    )}
-
-                    {registration.phone_number && (
-                      <div>
-                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-1">
-                          <Phone className="w-4 h-4" />
-                          <span className="text-sm font-medium">Phone</span>
-                        </div>
-                        <p className="text-gray-900 dark:text-gray-100 ml-6">{registration.phone_number}</p>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                    <div className="flex items-start gap-3 mb-3">
-                      <CreditCard className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
-                      <div>
-                        <h3 className="font-semibold text-yellow-800 dark:text-yellow-300 mb-1">
-                          Payment Required
-                        </h3>
-                        <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                          Complete your payment to access full registration details and webinar materials.
-                        </p>
-                      </div>
+                {registration.college_name && (
+                  <div>
+                    <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-1">
+                      <GraduationCap className="w-4 h-4" />
+                      <span className="text-sm font-medium">College</span>
                     </div>
+                    <p className="text-gray-900 dark:text-gray-100 ml-6">{registration.college_name}</p>
+                  </div>
+                )}
+
+                {registration.phone_number && (
+                  <div>
+                    <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-1">
+                      <Phone className="w-4 h-4" />
+                      <span className="text-sm font-medium">Phone</span>
+                    </div>
+                    <p className="text-gray-900 dark:text-gray-100 ml-6">{registration.phone_number}</p>
                   </div>
                 )}
 
                 <div className="pt-4 border-t">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-gray-700 dark:text-gray-300">Payment Status</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      registration.payment_status === 'completed'
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                        : registration.payment_status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
-                        : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                    }`}>
+                    <span className="px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full text-xs font-medium">
                       {registration.payment_status}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-700 dark:text-gray-300">Registration Status</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      registration.registration_status === 'confirmed'
-                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                        : registration.registration_status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
-                        : 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300'
-                    }`}>
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full text-xs font-medium">
                       {registration.registration_status}
                     </span>
                   </div>
