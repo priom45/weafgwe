@@ -620,22 +620,25 @@ export const WebinarLandingPage: React.FC<WebinarLandingPageProps> = ({ onShowAu
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              {
-                icon: <Target className="w-12 h-12 text-blue-500" />,
-                title: 'Round 1: Behavioral & Cognitive',
-                description: 'Master behavioral assessments and cognitive games with proven strategies and practice sessions.'
-              },
-              {
-                icon: <BookOpen className="w-12 h-12 text-purple-500" />,
-                title: 'Round 2: Technical Assessment',
-                description: 'Learn the technical concepts, coding patterns, and problem-solving techniques required.'
-              },
-              {
-                icon: <Award className="w-12 h-12 text-pink-500" />,
-                title: 'Guaranteed Success Strategies',
-                description: 'Get insider tips, expert guidance, and personalized doubt clearing sessions.'
-              }
-            ].map((item, index) => (
+  {
+    icon: <Target className="w-12 h-12 text-blue-500" />,
+    title: "Reading Section – Master Pauses & Clarity",
+    description:
+      "Learn how to read sentences with the correct pace, comma pauses, full stop pauses, stress points, and natural tone."
+  },
+  {
+    icon: <BookOpen className="w-12 h-12 text-purple-500" />,
+    title: "One-Minute Speaking — Perfect Structure",
+    description:
+      "Follow the 4-step structure: Introduction → 2 Points → Example → Conclusion. Includes 20 real speaking topics."
+  },
+  {
+    icon: <Award className="w-12 h-12 text-pink-500" />,
+    title: "AI Scoring System + Avoid Auto-Fail",
+    description:
+      "Understand Cognizant’s 6 AI scoring parameters and avoid auto-fail issues like noise, silence, and irrelevant topics."
+  }
+].map((item, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
