@@ -1136,3 +1136,78 @@ Generate the company description now:`;
 
   return result;
 };
+
+export const optimizeResumeWithATSFixes = async (
+  resume: string,
+  jobDescription: string,
+  userType: UserType,
+  userName?: string,
+  userEmail?: string,
+  userPhone?: string,
+  userLinkedin?: string,
+  userGithub?: string,
+  linkedinUrl?: string,
+  githubUrl?: string,
+  targetRole?: string,
+  additionalSections?: AdditionalSection[],
+  enableATSLengthFix: boolean = true,
+  enableMethodologyAlign: boolean = true
+): Promise<ResumeData & {
+  atsOptimization?: {
+    bulletLengthAnalysis?: any;
+    methodologyAlignment?: any;
+  };
+}> => {
+  let resumeData = await optimizeResume(
+    resume,
+    jobDescription,
+    userType,
+    userName,
+    userEmail,
+    userPhone,
+    userLinkedin,
+    userGithub,
+    linkedinUrl,
+    githubUrl,
+    targetRole,
+    additionalSections
+  );
+
+  const atsOptimization: any = {};
+
+  if (enableATSLengthFix) {
+    try {
+      const { atsBulletLengthFixer } = await import('./atsBulletLengthFixer');
+      const analysis = atsBulletLengthFixer.scanBullets(resumeData);
+
+      if (analysis.violations.length > 0) {
+        console.log(`[ATS] Found ${analysis.violations.length} bullet length violations. Applying fixes...`);
+        resumeData = atsBulletLengthFixer.applyFixes(resumeData, analysis);
+        atsOptimization.bulletLengthAnalysis = analysis;
+      }
+    } catch (error) {
+      console.error('[ATS] Bullet length fix failed:', error);
+    }
+  }
+
+  if (enableMethodologyAlign) {
+    try {
+      const { methodologyKeywordAligner } = await import('./methodologyKeywordAligner');
+      const alignmentResult = methodologyKeywordAligner.align(resumeData, jobDescription);
+
+      if (alignmentResult.inserted.length > 0) {
+        console.log(`[ATS] Inserting ${alignmentResult.inserted.length} methodology keywords...`);
+        resumeData = methodologyKeywordAligner.applyInsertions(resumeData, alignmentResult);
+      }
+
+      atsOptimization.methodologyAlignment = alignmentResult;
+    } catch (error) {
+      console.error('[ATS] Methodology alignment failed:', error);
+    }
+  }
+
+  return {
+    ...resumeData,
+    atsOptimization
+  };
+};
