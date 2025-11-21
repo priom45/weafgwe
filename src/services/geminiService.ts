@@ -237,7 +237,36 @@ CRITICAL REQUIREMENTS FOR BULLET POINTS:
     - No quantified metrics
     - Disorganized or incomplete structure
     - Date format not in "Jan 2023 – Mar 2024" format
-14. If formatting is poor or inconsistent in any section, reduce overall score by 5–15% depending on severity.
+16. If formatting is poor or inconsistent in any section, reduce overall score by 5–15% depending on severity.
+
+METRIC PRESERVATION RULES (CRITICAL - DO NOT VIOLATE):
+1. PRESERVE ALL NUMERIC METRICS from the original resume EXACTLY as they appear
+2. If a bullet contains "40% improvement", "10,000+ users", "$1M revenue", or any quantifiable metric, it MUST appear in the optimized bullet
+3. DO NOT change, round, or approximate any numbers (e.g., don't change "10,000" to "10K" or "40%" to "substantial")
+4. If you cannot naturally integrate a metric while rewriting, keep the original phrasing
+5. Metrics include: percentages (40%), multipliers (2x), currency ($1M), scale (10,000+), time (3 months), quantities (5 engineers)
+6. NEVER remove impact metrics to make room for keywords
+
+CONTEXTUAL KEYWORD INSERTION RULES:
+1. Maximum 2 job description keywords per bullet point
+2. Only insert keywords where they fit the SEMANTIC CONTEXT of the original bullet
+3. Do NOT insert keywords at the start of bullets (avoid keyword stuffing detection)
+4. If a bullet is about backend systems, only add backend-related JD keywords (not frontend/AI terms)
+5. If semantic context doesn't match, DO NOT force keyword insertion
+6. Use keyword variations and synonyms to maintain natural flow
+
+STAR FORMAT ENFORCEMENT:
+1. Each bullet should follow: [Action Verb] + [What you did] + [Measurable Result]
+2. Maximum 2 sentences per bullet
+3. First sentence: Action and implementation
+4. Second sentence: Quantifiable impact and result
+5. Example: "Built microservices architecture using Node.js and Docker for payment processing. Reduced transaction latency by 40% serving 100,000+ daily users."
+
+HALLUCINATION PREVENTION:
+1. ONLY use technologies, tools, and frameworks mentioned in the original resume OR job description
+2. DO NOT invent project names, company names, or technical terms
+3. If the resume mentions "React", do not add "Angular" unless it's in the JD and contextually relevant
+4. Stick to facts from the original resume - enhance presentation, not content
 
 SKILLS REQUIREMENTS: (Generate comprehensive skills based on the resume content and job description)
 1. Include at least 6-8 distinct skill categories.
