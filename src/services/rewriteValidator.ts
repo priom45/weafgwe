@@ -9,6 +9,16 @@ export interface RewriteValidationResult {
   missingMetrics: string[];
   recommendation: 'accept' | 'retry' | 'reject';
   reason?: string;
+  retryAttempt?: number;
+  retryPrompt?: string;
+}
+
+export interface RetryResult {
+  success: boolean;
+  finalBullet: string;
+  attempts: number;
+  validationHistory: RewriteValidationResult[];
+  reason: string;
 }
 
 export interface ValidationConfig {
@@ -19,6 +29,8 @@ export interface ValidationConfig {
 
 export class RewriteValidator {
   private static readonly DEFAULT_THRESHOLD = 0.70;
+  private static readonly MAX_RETRY_ATTEMPTS = 2;
+  private static readonly STRICT_RETRY_THRESHOLD = 0.75;
   private static readonly TECHNICAL_TERMS_PATTERNS = [
     /\b[A-Z][a-z]+(?:[A-Z][a-z]+)+\b/g,
     /\b[a-z]+\.[a-z]+(?:\.[a-z]+)*\b/gi,
@@ -352,6 +364,113 @@ Rewrite this bullet addressing the issues above:
       metricsPreservedCount,
       hallucinationCount
     };
+  }
+
+  static async validateWithRetry(
+    originalBullet: string,
+    rewriteFunction: (prompt: string, attempt: number) => Promise<string>,
+    allowedTerms: Set<string>,
+    config: Partial<ValidationConfig> = {}
+  ): Promise<RetryResult> {
+    const validationHistory: RewriteValidationResult[] = [];
+    let currentBullet = await rewriteFunction('', 0);
+    let attempts = 0;
+
+    while (attempts < this.MAX_RETRY_ATTEMPTS) {
+      attempts++;
+
+      const validation = await this.validateBulletRewrite(
+        originalBullet,
+        currentBullet,
+        allowedTerms,
+        {
+          ...config,
+          semanticThreshold: attempts > 0 ? this.STRICT_RETRY_THRESHOLD : this.DEFAULT_THRESHOLD
+        }
+      );
+
+      validation.retryAttempt = attempts;
+      validationHistory.push(validation);
+
+      if (validation.recommendation === 'accept') {
+        return {
+          success: true,
+          finalBullet: currentBullet,
+          attempts,
+          validationHistory,
+          reason: 'Validation passed'
+        };
+      }
+
+      if (validation.recommendation === 'reject') {
+        return {
+          success: false,
+          finalBullet: originalBullet,
+          attempts,
+          validationHistory,
+          reason: validation.reason || 'Validation rejected, using original bullet'
+        };
+      }
+
+      if (attempts < this.MAX_RETRY_ATTEMPTS) {
+        const retryPrompt = this.generateRetryPrompt(validation, originalBullet);
+        validation.retryPrompt = retryPrompt;
+
+        currentBullet = await rewriteFunction(retryPrompt, attempts);
+      }
+    }
+
+    return {
+      success: false,
+      finalBullet: validationHistory[validationHistory.length - 1].recommendation === 'retry'
+        ? currentBullet
+        : originalBullet,
+      attempts,
+      validationHistory,
+      reason: `Failed after ${attempts} attempts, using ${validationHistory[validationHistory.length - 1].recommendation === 'retry' ? 'last attempt' : 'original'}`
+    };
+  }
+
+  static async validateBatch(
+    bullets: Array<{ original: string; rewritten: string }>,
+    allowedTerms: Set<string>,
+    config: Partial<ValidationConfig> = {}
+  ): Promise<{
+    results: RewriteValidationResult[];
+    summary: ReturnType<typeof RewriteValidator.getValidationSummary>;
+  }> {
+    const results: RewriteValidationResult[] = [];
+
+    for (const { original, rewritten } of bullets) {
+      const validation = await this.validateBulletRewrite(
+        original,
+        rewritten,
+        allowedTerms,
+        config
+      );
+      results.push(validation);
+    }
+
+    const resultsMap = new Map(results.map((r, i) => [i, r]));
+    const summary = this.getValidationSummary(resultsMap);
+
+    return { results, summary };
+  }
+
+  static shouldRetry(validation: RewriteValidationResult, attemptNumber: number): boolean {
+    if (attemptNumber >= this.MAX_RETRY_ATTEMPTS) {
+      return false;
+    }
+
+    if (validation.recommendation === 'reject') {
+      return false;
+    }
+
+    if (validation.recommendation === 'retry') {
+      return true;
+    }
+
+    return false;
   }
 }
 

@@ -414,6 +414,157 @@ Rewrite maintaining ALL metrics:
       score
     };
   }
+
+  static enforceMetricPreservation(
+    originalBullet: string,
+    rewrittenBullet: string,
+    forceReinsertion: boolean = true
+  ): {
+    finalBullet: string;
+    metricsAdded: string[];
+    wasModified: boolean;
+  } {
+    const originalMetrics = this.extractMetrics(originalBullet);
+    const validation = this.validateMetricsInRewrite(originalMetrics, rewrittenBullet);
+
+    if (validation.allPreserved) {
+      return {
+        finalBullet: rewrittenBullet,
+        metricsAdded: [],
+        wasModified: false
+      };
+    }
+
+    if (!forceReinsertion) {
+      return {
+        finalBullet: rewrittenBullet,
+        metricsAdded: [],
+        wasModified: false
+      };
+    }
+
+    const finalBullet = this.reinsertMetrics(rewrittenBullet, validation.lost);
+
+    return {
+      finalBullet,
+      metricsAdded: validation.lost.map(m => m.value),
+      wasModified: true
+    };
+  }
+
+  static generateMetricSuggestions(
+    bullet: string,
+    jdRequirements: string
+  ): string[] {
+    const suggestions: string[] = [];
+
+    const requiresAccuracy = /\baccuracy\b/i.test(jdRequirements);
+    if (requiresAccuracy && !/\d+%/.test(bullet)) {
+      suggestions.push('Add accuracy metric (e.g., "achieving 98% accuracy")');
+    }
+
+    const requiresVolume = /\b(?:volume|throughput|documents?|records?|transactions?)\b/i.test(jdRequirements);
+    if (requiresVolume && !/\d+(?:,\d{3})*/.test(bullet)) {
+      suggestions.push('Add volume metric (e.g., "processing 10,000+ documents daily")');
+    }
+
+    const requiresSpeed = /\b(?:fast|quick|turnaround|time|speed)\b/i.test(jdRequirements);
+    if (requiresSpeed && !/\d+\s*(?:hours?|days?|weeks?|months?)/i.test(bullet)) {
+      suggestions.push('Add time metric (e.g., "reducing turnaround time by 3 days")');
+    }
+
+    const requiresImprovement = /\b(?:improve|optimize|increase|reduce|enhance)\b/i.test(jdRequirements);
+    if (requiresImprovement && !/(?:increased|reduced|improved).*?\d+%/i.test(bullet)) {
+      suggestions.push('Add improvement metric (e.g., "improved efficiency by 40%")');
+    }
+
+    const requiresScale = /\b(?:scale|users|customers|clients)\b/i.test(jdRequirements);
+    if (requiresScale && !/\d+(?:K|M|,\d{3})\+?\s*(?:users?|customers?|clients?)/i.test(bullet)) {
+      suggestions.push('Add scale metric (e.g., "serving 100,000+ users")');
+    }
+
+    return suggestions;
+  }
+
+  static reconcileMetrics(
+    originalBullets: string[],
+    rewrittenBullets: string[]
+  ): {
+    results: Array<{
+      index: number;
+      original: string;
+      rewritten: string;
+      metricsLost: string[];
+      preserved: boolean;
+    }>;
+    overallPreservationRate: number;
+    totalMetricsLost: number;
+  } {
+    const results: Array<{
+      index: number;
+      original: string;
+      rewritten: string;
+      metricsLost: string[];
+      preserved: boolean;
+    }> = [];
+
+    let totalMetrics = 0;
+    let totalPreserved = 0;
+
+    originalBullets.forEach((original, index) => {
+      const rewritten = rewrittenBullets[index];
+      if (!rewritten) return;
+
+      const originalMetrics = this.extractMetrics(original);
+      const validation = this.validateMetricsInRewrite(originalMetrics, rewritten);
+
+      totalMetrics += originalMetrics.length;
+      totalPreserved += validation.preserved.length;
+
+      results.push({
+        index,
+        original,
+        rewritten,
+        metricsLost: validation.lost.map(m => m.value),
+        preserved: validation.allPreserved
+      });
+    });
+
+    const overallPreservationRate = totalMetrics > 0 ? totalPreserved / totalMetrics : 1.0;
+    const totalMetricsLost = totalMetrics - totalPreserved;
+
+    return {
+      results,
+      overallPreservationRate,
+      totalMetricsLost
+    };
+  }
+
+  static generateReconciliationReport(
+    reconciliation: ReturnType<typeof MetricPreserver.reconcileMetrics>
+  ): string {
+    const report: string[] = [];
+
+    report.push('=== METRIC PRESERVATION RECONCILIATION ===');
+    report.push(`Overall Preservation Rate: ${(reconciliation.overallPreservationRate * 100).toFixed(1)}%`);
+    report.push(`Total Metrics Lost: ${reconciliation.totalMetricsLost}`);
+    report.push('');
+
+    const lostMetrics = reconciliation.results.filter(r => !r.preserved);
+    if (lostMetrics.length > 0) {
+      report.push('⚠️ BULLETS WITH LOST METRICS:');
+      lostMetrics.forEach((result, i) => {
+        report.push(`\n${i + 1}. Bullet ${result.index + 1}`);
+        report.push(`   Lost: ${result.metricsLost.join(', ')}`);
+        report.push(`   Original: ${result.original.substring(0, 60)}...`);
+        report.push(`   Rewritten: ${result.rewritten.substring(0, 60)}...`);
+      });
+    } else {
+      report.push('✅ ALL METRICS PRESERVED');
+    }
+
+    return report.join('\n');
+  }
 }
 
 export const metricPreserver = MetricPreserver;
