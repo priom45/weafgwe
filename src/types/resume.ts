@@ -94,6 +94,14 @@ export interface ExampleRewrite {
   explanation: string;
 }
 
+export interface SectionLevelScore {
+  jd_alignment_score: number;
+  ats_score: number;
+  skills_gap_score: number;
+  experience_relevancy_score: number;
+  project_match_score: number;
+}
+
 export interface ComprehensiveScore {
   overall: number;
   match_band: MatchBand;
@@ -118,6 +126,18 @@ export interface ComprehensiveScore {
   recommendations: string[];
   cached?: boolean;
   cache_expires_at?: string;
+  section_scores?: SectionLevelScore;
+  confidence_breakdown?: {
+    numeric_score: number;
+    components: {
+      literal_match: number;
+      semantic_match: number;
+      experience_relevancy: number;
+      keyword_coverage: number;
+      context_quality: number;
+    };
+    reasoning: string[];
+  };
 }
 
 export interface MatchScore {

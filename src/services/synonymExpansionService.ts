@@ -1,45 +1,68 @@
 import { semanticMatchingService } from './semanticMatchingService';
+import skillDictionary from '../data/skillDictionary.json';
 
 interface SynonymCluster {
   canonical: string;
   synonyms: string[];
-  semantic_similarity_threshold: number;
+  confidence: number;
+  category?: string;
+  importance?: string;
+}
+
+interface SkillDictionaryCluster {
+  canonical: string;
+  synonyms: string[];
+  confidence: number;
+  category: string;
+  importance: string;
 }
 
 class SynonymExpansionService {
-  private technicalSynonyms: Map<string, string[]> = new Map([
-    ['javascript', ['js', 'ecmascript', 'es6', 'es2015', 'node.js', 'nodejs']],
-    ['typescript', ['ts']],
-    ['python', ['py', 'python3', 'python2']],
-    ['react', ['reactjs', 'react.js']],
-    ['angular', ['angularjs', 'angular.js']],
-    ['vue', ['vuejs', 'vue.js']],
-    ['docker', ['containerization', 'containers']],
-    ['kubernetes', ['k8s', 'k8', 'container orchestration']],
-    ['aws', ['amazon web services', 'amazon aws']],
-    ['azure', ['microsoft azure', 'ms azure']],
-    ['gcp', ['google cloud platform', 'google cloud']],
-    ['ci/cd', ['continuous integration', 'continuous deployment', 'cicd']],
-    ['devops', ['dev ops', 'development operations']],
-    ['machine learning', ['ml', 'artificial intelligence', 'ai']],
-    ['deep learning', ['dl', 'neural networks']],
-    ['sql', ['structured query language', 'database']],
-    ['mongodb', ['mongo', 'nosql']],
-    ['postgresql', ['postgres', 'psql']],
-    ['redis', ['cache', 'in-memory database']],
-    ['git', ['version control', 'source control']],
-    ['agile', ['scrum', 'kanban']],
-    ['rest api', ['restful', 'rest', 'api']],
-    ['graphql', ['graph ql', 'gql']],
-    ['microservices', ['micro services', 'service-oriented architecture']],
-    ['frontend', ['front-end', 'client-side', 'ui']],
-    ['backend', ['back-end', 'server-side', 'api']],
-    ['fullstack', ['full-stack', 'full stack']]
-  ]);
-
+  private technicalSynonyms: Map<string, string[]> = new Map();
+  private synonymConfidence: Map<string, number> = new Map();
+  private synonymCategory: Map<string, string> = new Map();
+  private synonymImportance: Map<string, string> = new Map();
   private semanticCache: Map<string, string[]> = new Map();
+  private dictionaryLoaded: boolean = false;
 
-  async expandKeyword(keyword: string): Promise<string[]> {
+  constructor() {
+    this.loadSkillDictionary();
+  }
+
+  private loadSkillDictionary(): void {
+    if (this.dictionaryLoaded) return;
+
+    try {
+      const clusters = skillDictionary.synonym_clusters as SkillDictionaryCluster[];
+
+      for (const cluster of clusters) {
+        const canonical = cluster.canonical.toLowerCase().trim();
+        const synonyms = cluster.synonyms.map(s => s.toLowerCase().trim());
+
+        this.technicalSynonyms.set(canonical, synonyms);
+        this.synonymConfidence.set(canonical, cluster.confidence);
+        this.synonymCategory.set(canonical, cluster.category);
+        this.synonymImportance.set(canonical, cluster.importance);
+
+        for (const synonym of synonyms) {
+          if (!this.technicalSynonyms.has(synonym)) {
+            this.technicalSynonyms.set(synonym, [canonical, ...synonyms.filter(s => s !== synonym)]);
+            this.synonymConfidence.set(synonym, cluster.confidence * 0.9);
+            this.synonymCategory.set(synonym, cluster.category);
+            this.synonymImportance.set(synonym, cluster.importance);
+          }
+        }
+      }
+
+      this.dictionaryLoaded = true;
+      console.log(`Skill dictionary loaded: ${clusters.length} canonical terms, ${this.technicalSynonyms.size} total entries`);
+    } catch (error) {
+      console.error('Error loading skill dictionary:', error);
+      this.dictionaryLoaded = false;
+    }
+  }
+
+  async expandKeyword(keyword: string, includeSemantic: boolean = true): Promise<string[]> {
     const normalizedKeyword = keyword.toLowerCase().trim();
 
     if (this.technicalSynonyms.has(normalizedKeyword)) {
@@ -50,14 +73,31 @@ class SynonymExpansionService {
       return this.semanticCache.get(normalizedKeyword)!;
     }
 
-    try {
-      const semanticSynonyms = await this.findSemanticSynonyms(keyword);
-      this.semanticCache.set(normalizedKeyword, semanticSynonyms);
-      return semanticSynonyms;
-    } catch (error) {
-      console.error('Error finding semantic synonyms:', error);
-      return [];
+    if (includeSemantic) {
+      try {
+        const semanticSynonyms = await this.findSemanticSynonyms(keyword);
+        this.semanticCache.set(normalizedKeyword, semanticSynonyms);
+        return semanticSynonyms;
+      } catch (error) {
+        console.error('Error finding semantic synonyms:', error);
+        return [];
+      }
     }
+
+    return [];
+  }
+
+  getKeywordMetadata(keyword: string): { confidence: number; category?: string; importance?: string } {
+    const normalized = keyword.toLowerCase().trim();
+    return {
+      confidence: this.synonymConfidence.get(normalized) || 0.5,
+      category: this.synonymCategory.get(normalized),
+      importance: this.synonymImportance.get(normalized)
+    };
+  }
+
+  isDictionaryLoaded(): boolean {
+    return this.dictionaryLoaded;
   }
 
   private async findSemanticSynonyms(keyword: string): Promise<string[]> {
@@ -171,10 +211,13 @@ class SynonymExpansionService {
       });
 
       if (relatedTerms.length > 0) {
+        const metadata = this.getKeywordMetadata(term);
         clusters.push({
           canonical: term,
           synonyms: relatedTerms,
-          semantic_similarity_threshold: 0.75
+          confidence: metadata.confidence,
+          category: metadata.category,
+          importance: metadata.importance
         });
         processed.add(term);
       }
