@@ -15,7 +15,7 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
   isOpen,
   onClose,
   onAction,
-  targetPath = '/mock-interview',
+  targetPath = '/optimizer', // ✅ JD-based optimizer path
   ctaLabel,
 }) => {
   const navigate = useNavigate();
@@ -58,24 +58,24 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
           className="relative cursor-pointer group"
         >
           <img
-            src="https://i.ibb.co/Nk95wJM/offer-banner.png"
-            alt="Exclusive Interview Practice Offer"
+            src="https://image2url.com/images/1763786298323-c7018241-3539-4f2b-b0d9-565783e934ef.png"
+            alt="PrimoBoostAI Resume Optimizer Offer"
             className="w-full h-64 object-cover brightness-95 transition-transform duration-500 group-hover:scale-105"
           />
 
           {/* Overlay Text */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col items-center justify-end pb-10 text-center text-white">
             <h2 className="text-3xl sm:text-4xl font-extrabold mb-3 drop-shadow-lg">
-              🎯 Give Your Interview Before Your Real Interview
+              🚀 Your Resume Isn’t Getting Shortlisted?
             </h2>
             <p className="text-sm sm:text-base max-w-lg text-gray-200 mb-6">
-              Practice company-specific interviews with AI-driven feedback — boost your confidence and crack TCS, Infosys, Wipro, and more!
+              Fix ATS score, missing keywords, and weak project bullets with our JD-based Resume Optimizer in 60 seconds.
             </p>
             <button
               onClick={handleActionClick}
               className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-gray-900 font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all"
             >
-              {ctaLabel ?? 'Start Mock Interview Now'}
+              {ctaLabel ?? 'Optimize Resume Now'}
             </button>
           </div>
         </div>
