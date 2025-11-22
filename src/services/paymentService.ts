@@ -216,7 +216,8 @@ class PaymentService {
     return this.plans.find((p) => p.id === id);
   }
   getAddOnById(id: string): any | undefined {
-    return this.addOns.find((a) => a.id === a.id);
+    // Match by the requested add-on id; the previous self-comparison always returned the first add-on
+    return this.addOns.find((a) => a.id === id);
   }
 
   // ---------- Core subscription fetch (combined with add-ons) ----------
