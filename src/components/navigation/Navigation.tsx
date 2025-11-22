@@ -17,8 +17,7 @@ import {
   Shield,
   LayoutDashboard,
   Sparkles,
-  Gamepad2, // ADD THIS LINE
-  Grid,
+  Gamepad2,
 } from "lucide-react";
 
 import { useAuth } from "../../contexts/AuthContext";
@@ -31,14 +30,12 @@ interface NavigationProps {
 export const Navigation: React.FC<NavigationProps> = ({ onPageChange }) => {
   const [showAIToolsDropdown, setShowAIToolsDropdown] = useState(false);
   const [showDashboardDropdown, setShowDashboardDropdown] = useState(false);
-  const [showCategoriesDropdown, setShowCategoriesDropdown] = useState(false);
   const [showAdminDropdown, setShowAdminDropdown] = useState(false); // ADDED
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   const aiToolsRef = useRef<HTMLDivElement>(null);
   const dashboardRef = useRef<HTMLDivElement>(null);
-  const categoriesRef = useRef<HTMLDivElement>(null);
   const adminRef = useRef<HTMLDivElement>(null); // ADDED
 
   useEffect(() => {
@@ -49,9 +46,6 @@ export const Navigation: React.FC<NavigationProps> = ({ onPageChange }) => {
       if (dashboardRef.current && !dashboardRef.current.contains(event.target as Node)) {
         setShowDashboardDropdown(false);
       }
-      if (categoriesRef.current && !categoriesRef.current.contains(event.target as Node)) {
-        setShowCategoriesDropdown(false);
-      }
       if (adminRef.current && !adminRef.current.contains(event.target as Node)) {
         setShowAdminDropdown(false); // ADDED
       }
@@ -60,7 +54,6 @@ export const Navigation: React.FC<NavigationProps> = ({ onPageChange }) => {
       if (event.key === 'Escape') {
         setShowAIToolsDropdown(false);
         setShowDashboardDropdown(false);
-        setShowCategoriesDropdown(false);
         setShowAdminDropdown(false); // ADDED
       }
     };
@@ -82,6 +75,9 @@ const navigationItems = [
 
   const dashboardItems = [
     { id: "/about", label: "About Us", icon: <Info className="w-4 h-4" /> },
+    { id: "/blog", label: "Blog", icon: <BookOpen className="w-4 h-4" /> },
+    { id: "/webinars", label: "Webinars", icon: <Sparkles className="w-4 h-4" /> },
+    { id: "/gaming", label: "Gaming", icon: <Gamepad2 className="w-4 h-4" /> },
     { id: "/careers", label: "Careers", icon: <Users className="w-4 h-4" /> },
     { id: "/contact", label: "Contact", icon: <Phone className="w-4 h-4" /> },
     ...(isAuthenticated
@@ -100,12 +96,6 @@ const navigationItems = [
     { id: "/score-checker", label: "Score Checker", icon: <TrendingUp className="w-4 h-4" /> },
     { id: "/guided-builder", label: "Guided Builder", icon: <PlusCircle className="w-4 h-4" /> },
     { id: "/linkedin-generator", label: "LinkedIn Messages", icon: <MessageCircle className="w-4 h-4" /> },
-  ];
-
-  const categoryLinks = [
-    { id: "/blog", label: "Blog", icon: <BookOpen className="w-4 h-4" /> },
-    { id: "/webinars", label: "Webinars", icon: <Sparkles className="w-4 h-4" /> },
-    { id: "/gaming", label: "Gaming", icon: <Gamepad2 className="w-4 h-4" /> },
   ];
 
   // ADDED: Admin menu items
@@ -137,38 +127,6 @@ const navigationItems = [
       ))}
 
       {/* Categories (Blog, Webinars, Gaming) */}
-      <div className="relative" ref={categoriesRef}>
-        <button
-          onClick={() => {
-            setShowCategoriesDropdown(!showCategoriesDropdown);
-            setShowAIToolsDropdown(false);
-            setShowDashboardDropdown(false);
-            setShowAdminDropdown(false);
-          }}
-          className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-300 dark:hover:text-neon-cyan-400 dark:hover:bg-dark-200 transition-all duration-200"
-        >
-          <Grid className="w-4 h-4" />
-          <span>Categories</span>
-          <ChevronDown className="w-4 h-4" />
-        </button>
-
-        {showCategoriesDropdown && (
-          <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 dark:bg-dark-100 dark:border-dark-300">
-            {categoryLinks.map((item) => (
-              <Link
-                key={item.id}
-                to={item.id}
-                onClick={() => setShowCategoriesDropdown(false)}
-                className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-dark-200 transition-colors text-gray-700 dark:text-gray-300"
-              >
-                {item.icon}
-                <span className="font-medium">{item.label}</span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* AI Tools */}
       {isAuthenticated && (
         <div className="relative" ref={aiToolsRef}>
@@ -176,7 +134,6 @@ const navigationItems = [
           onClick={() => {
             setShowAIToolsDropdown(!showAIToolsDropdown);
             setShowDashboardDropdown(false);
-            setShowCategoriesDropdown(false);
             setShowAdminDropdown(false); // ADDED
           }}
           className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-300 dark:hover:text-neon-cyan-400 dark:hover:bg-dark-200 transition-all duration-200"
@@ -210,7 +167,6 @@ const navigationItems = [
           onClick={() => {
             setShowDashboardDropdown(!showDashboardDropdown);
             setShowAIToolsDropdown(false);
-            setShowCategoriesDropdown(false);
             setShowAdminDropdown(false); // ADDED
           }}
           className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-300 dark:hover:text-neon-cyan-400 dark:hover:bg-dark-200 transition-all duration-200"
@@ -245,7 +201,6 @@ const navigationItems = [
             setShowAdminDropdown(!showAdminDropdown);
             setShowAIToolsDropdown(false);
             setShowDashboardDropdown(false);
-            setShowCategoriesDropdown(false);
           }}
           className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 text-gray-700 hover:text-red-600 hover:bg-red-50 dark:text-gray-300 dark:hover:text-red-400 dark:hover:bg-red-900/20"
         >
