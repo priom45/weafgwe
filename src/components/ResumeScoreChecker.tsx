@@ -206,11 +206,18 @@ export const ResumeScoreChecker: React.FC<ResumeScoreCheckerProps> = ({
     }
 
     // --- Credit Check Logic ---
-   // --- Credit Check Logic ---
 const currentSubscription = await paymentService.getUserSubscription(user.id);
-const hasScoreCheckCredits =
-  currentSubscription &&
-  currentSubscription.scoreChecksTotal - currentSubscription.scoreChecksUsed > 0;
+const subscriptionCredits = currentSubscription
+  ? currentSubscription.scoreChecksTotal - currentSubscription.scoreChecksUsed
+  : 0;
+
+const addOnCredits = await paymentService.getAddOnCreditsByType(user.id, 'score_check');
+const totalCredits = Math.max(0, subscriptionCredits) + addOnCredits;
+const hasScoreCheckCredits = totalCredits > 0;
+
+console.log('[Credits] Subscription credits:', subscriptionCredits);
+console.log('[Credits] Add-on credits:', addOnCredits);
+console.log('[Credits] Total credits:', totalCredits);
 
 const liteCheckPlan = paymentService.getPlanById("lite_check");
 const hasFreeTrialAvailable =
@@ -218,6 +225,7 @@ const hasFreeTrialAvailable =
   (!currentSubscription || currentSubscription.planId !== "lite_check");
 
 if (hasScoreCheckCredits) {
+  console.log('[Credits] Credits available, proceeding with analysis');
   _analyzeResumeInternal();
 } else if (hasFreeTrialAvailable) {
   onShowAlert(
@@ -247,30 +255,25 @@ if (hasScoreCheckCredits) {
       "your current plan"
     : "your account";
 
-  const totalCredits = currentSubscription?.scoreChecksTotal || 0;
-  const usedCredits = currentSubscription?.scoreChecksUsed || 0;
-  const remainingCredits = totalCredits - usedCredits;
-
   let message = "";
-  if (currentSubscription && remainingCredits <= 0) {
-    message =
-      "You have used all your " +
-      totalCredits +
-      " Resume Score Checks from " +
-      planName +
-      ".";
-  } else if (!currentSubscription) {
-    message = "You don't have any active plan for Resume Score Checks.";
+  if (subscriptionCredits <= 0 && addOnCredits <= 0) {
+    if (currentSubscription) {
+      message = `You have used all your Resume Score Checks from ${planName}.`;
+    } else {
+      message = "You don't have any active plan or add-on credits for Resume Score Checks.";
+    }
+    message += " Please purchase credits or upgrade your plan to continue.";
   } else {
-    message = "Your Resume Score Check credits are exhausted.";
+    message = "Your Resume Score Check credits are exhausted. Please purchase more credits.";
   }
-  message += " Please upgrade your plan to continue checking scores.";
+
+  console.log('[Credits] No credits available, showing upgrade modal');
 
   onShowAlert(
     "Resume Score Check Credits Exhausted",
     message,
     "warning",
-    "Upgrade Plan",
+    "Get Credits",
     () => onShowSubscriptionPlans("score-checker")
   );
 

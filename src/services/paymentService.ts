@@ -1026,6 +1026,138 @@ class PaymentService {
       throw error;
     }
   }
+
+  async getAddOnCreditsByType(userId: string, creditType: CreditType): Promise<number> {
+    console.log(`PaymentService: Fetching add-on credits for userId: ${userId}, creditType: ${creditType}`);
+    try {
+      const { data: addonType, error: addonTypeError } = await supabase
+        .from('addon_types')
+        .select('id')
+        .eq('type_key', creditType)
+        .maybeSingle();
+
+      if (addonTypeError) {
+        console.error('PaymentService: Error fetching addon_type:', addonTypeError.message);
+        return 0;
+      }
+
+      if (!addonType) {
+        console.warn(`PaymentService: No addon_type found for type_key: ${creditType}`);
+        return 0;
+      }
+
+      const { data: credits, error: creditsError } = await supabase
+        .from('user_addon_credits')
+        .select('quantity_remaining')
+        .eq('user_id', userId)
+        .eq('addon_type_id', addonType.id)
+        .gt('quantity_remaining', 0);
+
+      if (creditsError) {
+        console.error('PaymentService: Error fetching user add-on credits:', creditsError.message);
+        return 0;
+      }
+
+      const totalCredits = credits?.reduce((sum, credit) => sum + credit.quantity_remaining, 0) || 0;
+      console.log(`PaymentService: Total add-on credits for ${creditType}: ${totalCredits}`);
+      return totalCredits;
+    } catch (error: any) {
+      console.error('PaymentService: Unexpected error in getAddOnCreditsByType:', error.message);
+      return 0;
+    }
+  }
+
+  async consumeAddOnCredit(userId: string, creditType: CreditType): Promise<{ success: boolean; error?: string }> {
+    console.log(`PaymentService: Attempting to consume add-on credit for userId: ${userId}, creditType: ${creditType}`);
+    try {
+      const { data: addonType, error: addonTypeError } = await supabase
+        .from('addon_types')
+        .select('id')
+        .eq('type_key', creditType)
+        .maybeSingle();
+
+      if (addonTypeError || !addonType) {
+        const errorMsg = `Addon type not found for: ${creditType}`;
+        console.error('PaymentService:', errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
+      const { data: creditRecord, error: fetchError } = await supabase
+        .from('user_addon_credits')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('addon_type_id', addonType.id)
+        .gt('quantity_remaining', 0)
+        .order('purchased_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error('PaymentService: Error fetching credit record:', fetchError.message);
+        return { success: false, error: fetchError.message };
+      }
+
+      if (!creditRecord) {
+        return { success: false, error: 'No add-on credits available' };
+      }
+
+      const { error: updateError } = await supabase
+        .from('user_addon_credits')
+        .update({ quantity_remaining: creditRecord.quantity_remaining - 1 })
+        .eq('id', creditRecord.id);
+
+      if (updateError) {
+        console.error('PaymentService: Error updating credit:', updateError.message);
+        return { success: false, error: updateError.message };
+      }
+
+      console.log(`PaymentService: Successfully consumed 1 ${creditType} credit`);
+      return { success: true };
+    } catch (error: any) {
+      console.error('PaymentService: Unexpected error in consumeAddOnCredit:', error.message);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async getTotalCreditsAvailable(userId: string, creditType: CreditType): Promise<{
+    subscription: number;
+    addOn: number;
+    total: number;
+  }> {
+    console.log(`PaymentService: Calculating total credits for userId: ${userId}, creditType: ${creditType}`);
+
+    const subscription = await this.getUserSubscription(userId);
+    let subscriptionCredits = 0;
+
+    if (subscription) {
+      switch (creditType) {
+        case 'score_check':
+          subscriptionCredits = subscription.scoreChecksTotal - subscription.scoreChecksUsed;
+          break;
+        case 'optimization':
+          subscriptionCredits = subscription.optimizationsTotal - subscription.optimizationsUsed;
+          break;
+        case 'linkedin_messages':
+          subscriptionCredits = subscription.linkedinMessagesTotal - subscription.linkedinMessagesUsed;
+          break;
+        case 'guided_build':
+          subscriptionCredits = subscription.guidedBuildsTotal - subscription.guidedBuildsUsed;
+          break;
+      }
+    }
+
+    subscriptionCredits = Math.max(0, subscriptionCredits);
+    const addOnCredits = await this.getAddOnCreditsByType(userId, creditType);
+    const total = subscriptionCredits + addOnCredits;
+
+    console.log(`PaymentService: Credits breakdown - Subscription: ${subscriptionCredits}, Add-on: ${addOnCredits}, Total: ${total}`);
+
+    return {
+      subscription: subscriptionCredits,
+      addOn: addOnCredits,
+      total
+    };
+  }
 }
 
 export const paymentService = new PaymentService();
