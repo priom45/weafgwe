@@ -85,6 +85,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const navigate = useNavigate(); // Initialize useNavigate
   const { user } = useAuth(); // ADDED: Access user from AuthContext
   const [globalResumesCreated, setGlobalResumesCreated] = useState<number>(50000);
+  const [scoreChecksCompleted, setScoreChecksCompleted] = useState<number>(500);
 
   // Fetch global resumes created count on component mount
   useEffect(() => {
@@ -99,6 +100,31 @@ export const HomePage: React.FC<HomePageProps> = ({
     };
 
     fetchGlobalCount();
+  }, []);
+
+  // Load and listen for local resume score check count (base 500 + user increments)
+  useEffect(() => {
+    const base = 500;
+    const hydrateCount = () => {
+      const stored = parseInt(localStorage.getItem('scoreCheckCount') || '0', 10);
+      const safeStored = isNaN(stored) ? 0 : stored;
+      setScoreChecksCompleted(base + safeStored);
+    };
+
+    hydrateCount();
+
+    const handleScoreCheckEvent = (event: Event) => {
+      const detail = (event as CustomEvent<{ total?: number }>).detail;
+      const total = typeof detail?.total === 'number' ? detail.total : null;
+      if (total !== null) {
+        setScoreChecksCompleted(base + total);
+      } else {
+        hydrateCount();
+      }
+    };
+
+    window.addEventListener('score-check-completed', handleScoreCheckEvent);
+    return () => window.removeEventListener('score-check-completed', handleScoreCheckEvent);
   }, []);
 
   // Helper function to get plan icon based on icon string
@@ -221,6 +247,12 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   const stats = [
     {
+      number: scoreChecksCompleted.toLocaleString(),
+      label: 'Resume Score Checks',
+      icon: <TrendingUp className="w-5 h-5" />,
+      microcopy: 'Completed by members to optimize their resumes'
+    },
+    {
       number: globalResumesCreated.toLocaleString(),
       label: 'Resumes Created', 
       icon: <FileText className="w-5 h-5" />, 
@@ -284,11 +316,11 @@ export const HomePage: React.FC<HomePageProps> = ({
             </button>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12">
+            <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-12 justify-items-stretch">
               {stats.map((stat, index) => (
                 <div
                   key={index}
-                  className="card-hover bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-lg transition-all duration-300 border border-white/50 dark:bg-dark-100/80 dark:border-dark-300/50 dark:hover:shadow-neon-cyan/20"
+                  className="card-hover bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-lg transition-all duration-300 border border-white/50 dark:bg-dark-100/80 dark:border-dark-300/50 dark:hover:shadow-neon-cyan/20 h-full flex flex-col items-center text-center"
                 >
                   <div className="flex items-center justify-center mb-3">
                     <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-2 sm:p-3 rounded-full dark:from-neon-cyan-500 dark:to-neon-blue-500 dark:shadow-neon-cyan">
