@@ -31,7 +31,7 @@ import { LoadingAnimation } from './LoadingAnimation';
 import { ComprehensiveScore, ScoringMode, ExtractionResult, ConfidenceLevel, MatchBand, DetailedScore } from '../types/resume';
 import type { Subscription } from '../types/payment';
 import { paymentService } from '../services/paymentService';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext'; // Import useAuth to get the user object
 
 interface ResumeScoreCheckerProps {
@@ -70,6 +70,7 @@ export const ResumeScoreChecker: React.FC<ResumeScoreCheckerProps> = ({
   console.log('ResumeScoreChecker: Component rendered. userSubscription:', userSubscription);
   const { user } = useAuth(); // Get the user object from AuthContext
   const navigate = useNavigate();
+  const location = useLocation();
   const [extractionResult, setExtractionResult] = useState<ExtractionResult>({ text: '', extraction_mode: 'TEXT', trimmed: false });
   const [jobDescription, setJobDescription] = useState('');
   const [jobTitle, setJobTitle] = useState('');
@@ -83,6 +84,21 @@ export const ResumeScoreChecker: React.FC<ResumeScoreCheckerProps> = ({
   const [hasShownCreditExhaustedAlert, setHasShownCreditExhaustedAlert] = useState(false);
 
   const [analysisInterrupted, setAnalysisInterrupted] = useState(false);
+
+  // If we arrive from Job Details with state, prefill JD-based flow and jump to Step 1
+  useEffect(() => {
+    const state = (location.state || {}) as {
+      jobDescription?: string;
+      jobTitle?: string;
+    };
+
+    if (state.jobDescription || state.jobTitle) {
+      setScoringMode('jd_based');
+      setCurrentStep(1);
+      if (state.jobDescription) setJobDescription(state.jobDescription);
+      if (state.jobTitle) setJobTitle(state.jobTitle);
+    }
+  }, [location.state]);
 
   // NEW useEffect: Reset hasShownCreditExhaustedAlert when userSubscription changes
   useEffect(() => {
@@ -806,4 +822,3 @@ if (hasScoreCheckCredits) {
     </>
   );
 };
-
