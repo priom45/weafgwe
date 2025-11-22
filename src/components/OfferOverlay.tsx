@@ -1,5 +1,5 @@
 // src/components/OfferOverlay.tsx
-import React, { useState } from "react";
+import React from "react";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -9,16 +9,22 @@ interface OfferOverlayProps {
   onAction?: () => void;
   targetPath?: string;
 
+  // image only banner (your promo image with text inside)
   imageSrc: string;
 
-  // If image already contains text (your case) keep false
+  // if your image already has headline/subline inside,
+  // keep this FALSE so no duplicate text happens
   showTextOverlay?: boolean;
 
+  // optional text overlay (only if showTextOverlay=true)
   headline?: string;
   subline?: string;
   footnote?: string;
+
+  // CTA overlay as small pill (not button-style)
   ctaLabel?: string;
 
+  // image fitting
   fit?: "cover" | "contain";
 }
 
@@ -30,17 +36,15 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
 
   imageSrc,
 
-  showTextOverlay = false,
+  showTextOverlay = false, // ✅ default: no text overlay (prevents clumsy duplicate)
   headline = "🚀 Your Resume Isn’t Getting Shortlisted? Fix it in 60 Seconds.",
   subline = "ATS score, missing keywords, weak projects — PrimoBoostAI finds + fixes everything.",
   footnote = "🔥 Limited free credits today.",
   ctaLabel = "Optimize Resume Now",
 
-  fit = "contain",
+  fit = "contain", // ✅ keeps full banner visible
 }) => {
   const navigate = useNavigate();
-  const [imgFailed, setImgFailed] = useState(false);
-
   if (!isOpen) return null;
 
   const handleActionClick = () => {
@@ -55,8 +59,6 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
       handleActionClick();
     }
   };
-
-  const fitClass = fit === "cover" ? "object-cover" : "object-contain";
 
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fade-in-down">
@@ -74,34 +76,27 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
             <X className="w-5 h-5" />
           </button>
 
-          {/* Clickable banner box */}
+          {/* Clickable banner area */}
           <div
             role="button"
             tabIndex={0}
             onClick={handleActionClick}
             onKeyDown={onKeyActivate}
-            className="relative cursor-pointer group w-full min-h-[260px] sm:min-h-[320px] md:min-h-[380px]"
+            className="relative cursor-pointer group"
             aria-label="Open Offer Target"
           >
-            {/* ✅ Reserve height always + image fill */}
-            {!imgFailed ? (
-              <img
-                src={imageSrc}
-                alt="PrimoBoostAI Offer"
-                className={`absolute inset-0 w-full h-full ${fitClass}`}
-                onError={() => setImgFailed(true)}
-                loading="eager"
-                draggable={false}
-              />
-            ) : (
-              // ✅ fallback if image fails to load
-              <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" />
-            )}
+            {/* ✅ Banner image (size auto by real width/height) */}
+            <img
+              src={imageSrc}
+              alt="PrimoBoostAI Offer"
+              className={`w-full h-auto max-h-[80vh] object-${fit} block`}
+            />
 
-            {/* bottom readability fade */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            {/* ✅ Only small overlays on top of image */}
+            {/* Soft readability fade only at bottom */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
-            {/* CTA + footnote (inside banner) */}
+            {/* CTA pill (click handled by whole card) */}
             <div className="absolute bottom-5 left-5 sm:bottom-7 sm:left-7 z-10">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white font-semibold backdrop-blur-sm">
                 {ctaLabel}
@@ -113,7 +108,7 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
               </div>
             </div>
 
-            {/* OPTIONAL text overlay only when needed */}
+            {/* OPTIONAL: if you ever want text on top of plain image */}
             {showTextOverlay && (
               <div className="absolute inset-0 z-10 flex flex-col justify-end p-5 sm:p-7">
                 <h2 className="text-white text-2xl sm:text-3xl font-extrabold drop-shadow">
