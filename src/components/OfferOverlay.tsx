@@ -3,25 +3,29 @@ import React from "react";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-type OverlayMode = "resume" | "mock";
-
 interface OfferOverlayProps {
   isOpen: boolean;
   onClose: () => void;
   onAction?: () => void;
   targetPath?: string;
 
-  // prevent wrong CTA mixing
-  mode?: OverlayMode;
+  // image only banner (your promo image with text inside)
+  imageSrc: string;
 
-  // optional overrides
+  // if your image already has headline/subline inside,
+  // keep this FALSE so no duplicate text happens
+  showTextOverlay?: boolean;
+
+  // optional text overlay (only if showTextOverlay=true)
   headline?: string;
   subline?: string;
   footnote?: string;
-  imageSrc?: string;
 
-  // if parent passes, still we sanitize based on mode
+  // CTA overlay as small pill (not button-style)
   ctaLabel?: string;
+
+  // image fitting
+  fit?: "cover" | "contain";
 }
 
 export const OfferOverlay: React.FC<OfferOverlayProps> = ({
@@ -29,54 +33,23 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
   onClose,
   onAction,
   targetPath = "/resume-optimizer",
-  mode = "resume",
 
-  headline,
-  subline,
-  footnote,
-  imageSrc = "https://image2url.com/images/1763786298323-c7018241-3539-4f2b-b0d9-565783e934ef.png",
-  ctaLabel,
+  imageSrc,
+
+  showTextOverlay = false, // ✅ default: no text overlay (prevents clumsy duplicate)
+  headline = "🚀 Your Resume Isn’t Getting Shortlisted? Fix it in 60 Seconds.",
+  subline = "ATS score, missing keywords, weak projects — PrimoBoostAI finds + fixes everything.",
+  footnote = "🔥 Limited free credits today.",
+  ctaLabel = "Optimize Resume Now",
+
+  fit = "contain", // ✅ keeps full banner visible
 }) => {
   const navigate = useNavigate();
   if (!isOpen) return null;
 
-  // ✅ Option 1 promo defaults
-  const resumeDefaults = {
-    headline: "🚀 Your Resume Isn’t Getting Shortlisted? Fix it in 60 Seconds.",
-    subline:
-      "ATS score, missing keywords, weak projects — PrimoBoostAI finds + fixes everything.",
-    footnote: "🔥 Limited free credits today.",
-    cta: "Optimize Resume Now",
-    path: "/resume-optimizer",
-  };
-
-  const mockDefaults = {
-    headline: "🎤 Crack Communication & Mock Interviews Fast.",
-    subline: "Practice real interview patterns with AI feedback.",
-    footnote: "🔥 Free mock credits today.",
-    cta: "Start Mock Interview Now",
-    path: "/mock-interview",
-  };
-
-  const config = mode === "mock" ? mockDefaults : resumeDefaults;
-
-  const finalHeadline = headline ?? config.headline;
-  const finalSubline = subline ?? config.subline;
-  const finalFootnote = footnote ?? config.footnote;
-
-  // ✅ sanitize CTA so mock CTA never shows in resume mode
-  const finalCtaLabel =
-    mode === "resume"
-      ? (ctaLabel && !ctaLabel.toLowerCase().includes("mock")
-          ? ctaLabel
-          : config.cta)
-      : ctaLabel ?? config.cta;
-
-  const finalTargetPath = targetPath ?? config.path;
-
   const handleActionClick = () => {
     if (onAction) onAction();
-    else if (finalTargetPath) navigate(finalTargetPath);
+    else navigate(targetPath);
     onClose();
   };
 
@@ -88,22 +61,22 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 p-4 sm:p-6 bg-black/75 backdrop-blur-md flex items-center justify-center animate-fade-in-down">
-      <div className="relative w-full max-w-3xl">
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fade-in-down">
+      <div className="relative w-full max-w-4xl">
         {/* cinematic glow */}
         <div className="absolute -inset-1 rounded-[28px] bg-gradient-to-r from-yellow-400/20 via-orange-500/20 to-blue-500/20 blur-2xl opacity-80" />
 
-        <div className="relative bg-white dark:bg-dark-100 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-dark-300">
+        <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-black">
           {/* Close */}
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 z-20 p-2 rounded-full bg-gray-900/60 text-white hover:bg-gray-800 transition-colors"
+            className="absolute top-3 right-3 z-20 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
 
-          {/* Clickable banner */}
+          {/* Clickable banner area */}
           <div
             role="button"
             tabIndex={0}
@@ -112,38 +85,40 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
             className="relative cursor-pointer group"
             aria-label="Open Offer Target"
           >
+            {/* ✅ Banner image (size auto by real width/height) */}
             <img
               src={imageSrc}
               alt="PrimoBoostAI Offer"
-              className="w-full h-72 sm:h-80 object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+              className={`w-full h-auto max-h-[80vh] object-${fit} block`}
             />
 
-            {/* gradient + content */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/10">
-              <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-8">
-                <h2 className="text-white text-2xl sm:text-3xl font-extrabold leading-snug drop-shadow">
-                  {finalHeadline}
-                </h2>
+            {/* ✅ Only small overlays on top of image */}
+            {/* Soft readability fade only at bottom */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
-                <p className="mt-2 text-white/90 text-sm sm:text-base leading-relaxed max-w-2xl">
-                  {finalSubline}
-                </p>
+            {/* CTA pill (click handled by whole card) */}
+            <div className="absolute bottom-5 left-5 sm:bottom-7 sm:left-7 z-10">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white font-semibold backdrop-blur-sm">
+                {ctaLabel}
+                <span className="text-white/60 text-sm">→ opens optimizer</span>
+              </div>
 
-                {/* ✅ CTA as TEXT only (no button UI) */}
-                <div className="mt-5 inline-flex items-center gap-2 text-white font-semibold text-base sm:text-lg">
-                  <span className="px-3 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm">
-                    {finalCtaLabel}
-                  </span>
-                  <span className="text-white/70 text-sm sm:text-base">
-                    → opens optimizer
-                  </span>
-                </div>
-
-                <div className="mt-4 text-orange-300 font-bold text-sm sm:text-base">
-                  {finalFootnote}
-                </div>
+              <div className="mt-3 text-orange-300 font-bold text-sm sm:text-base">
+                {footnote}
               </div>
             </div>
+
+            {/* OPTIONAL: if you ever want text on top of plain image */}
+            {showTextOverlay && (
+              <div className="absolute inset-0 z-10 flex flex-col justify-end p-5 sm:p-7">
+                <h2 className="text-white text-2xl sm:text-3xl font-extrabold drop-shadow">
+                  {headline}
+                </h2>
+                <p className="mt-2 text-white/90 text-sm sm:text-base max-w-2xl">
+                  {subline}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* premium strip */}
