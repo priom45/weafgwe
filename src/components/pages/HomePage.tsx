@@ -311,7 +311,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               className="btn-primary px-8 py-4 rounded-2xl text-lg font-bold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 mb-12"
             >
               <Sparkles className="w-6 h-6 mr-2" />
-              Start Building My Resume
+              Start Optimize  Resume
              
             </button>
 
