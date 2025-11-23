@@ -123,7 +123,7 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
                       className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-base font-semibold text-slate-900 shadow-lg shadow-blue-500/20 transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900"
                     >
                       {ctaLabel}
-                      <span className="ml-2 text-sm text-slate-600">-> Open Optimizer</span>
+                      <span className="ml-2 text-sm text-slate-600">&#8594; Open Optimizer</span>
                     </motion.button>
 
                     <button
