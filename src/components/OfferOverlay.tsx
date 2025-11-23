@@ -10,15 +10,6 @@ interface OfferOverlayProps {
   targetPath?: string;
 
   imageSrc: string;
-
-  showTextOverlay?: boolean;
-
-  headline?: string;
-  subline?: string;
-  footnote?: string;
-
-  ctaLabel?: string;
-
   fit?: "cover" | "contain";
 }
 
@@ -28,15 +19,8 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
   onAction,
   targetPath = "/optimizer",
 
-  imageSrc="https://img.sanishtech.com/u/d3c3a0693f8dfeff84478ac6f4b44977.png",
-
-  showTextOverlay = false,
-  headline = "🚀 Your Resume Isn’t Getting Shortlisted? Fix it in 60 Seconds.",
-  subline = "ATS score, missing keywords, weak projects — PrimoBoostAI finds + fixes everything.",
-  footnote = "🔥 Limited free credits today.",
-  ctaLabel = "Optimize Resume Now",
-
-  fit = "cover", // IMPORTANT: perfect image display
+  imageSrc = "https://img.sanishtech.com/u/d3c3a0693f8dfeff84478ac6f4b44977.png",
+  fit = "cover"
 }) => {
   const navigate = useNavigate();
   if (!isOpen) return null;
@@ -47,78 +31,46 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
     onClose();
   };
 
-  const onKeyActivate: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      handleActionClick();
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-lg flex items-center justify-center p-3 sm:p-6 animate-fade-in-down">
       <div className="relative w-full max-w-4xl">
 
-        {/* Glow Border */}
+        {/* Outer Glow */}
         <div className="absolute -inset-1 rounded-[28px] bg-gradient-to-r from-yellow-400/20 via-orange-500/20 to-blue-500/20 blur-2xl opacity-80" />
 
         <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-black">
 
-          {/* Close Button */}
+          {/* Close button */}
           <button
             onClick={onClose}
             className="absolute top-3 right-3 z-30 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition"
-            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
 
-          {/* Clickable Content */}
+          {/* Clickable Area */}
           <div
             role="button"
             tabIndex={0}
             onClick={handleActionClick}
-            onKeyDown={onKeyActivate}
             className="relative cursor-pointer"
-            aria-label="Open Optimizer"
           >
             {/* Banner Image */}
             <img
               src={imageSrc}
-              alt="PrimoBoostAI Offer"
-              className={`w-full h-auto max-h-[85vh] object-${fit} block`}
+              alt="PrimoBoostAI Banner"
+              className={`w-full h-auto max-h-[85vh] object-${fit}`}
             />
 
-            {/* Soft gradient for readability */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-            {/* CTA + Footnote */}
-            <div className="absolute bottom-8 left-8 z-30 flex flex-col">
-
-              {/* CTA Pill */}
+            {/* Bottom CTA */}
+            <div className="absolute bottom-8 left-8 z-30">
               <div className="inline-flex items-center gap-2 px-6 py-3 
                 rounded-full bg-white/15 backdrop-blur-md
                 border border-white/25 text-white font-semibold text-base">
-                {ctaLabel}
+                Optimize Resume Now
                 <span className="text-white/60 text-sm">→ Open Optimizer</span>
               </div>
-
-              {/* Footnote */}
-              <div className="mt-3 text-orange-300 font-semibold text-sm">
-                {footnote}
-              </div>
             </div>
-
-            {/* OPTIONAL text overlay for plain images */}
-            {showTextOverlay && (
-              <div className="absolute inset-0 z-20 flex flex-col justify-end p-6">
-                <h2 className="text-white text-3xl font-bold drop-shadow-lg">
-                  {headline}
-                </h2>
-                <p className="mt-2 text-white/90 text-sm sm:text-base max-w-2xl">
-                  {subline}
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Premium Strip */}
