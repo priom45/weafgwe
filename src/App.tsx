@@ -728,8 +728,8 @@ const handleDiwaliCTAClick = useCallback(() => {
           <OfferOverlay
             isOpen={showWelcomeOffer}
             onClose={() => setShowWelcomeOffer(false)}
-            targetPath="/mock-interview"
-            ctaLabel="Start Mock Interview Now"
+            targetPath="/optimizer"
+            ctaLabel="Optimize Resume Now"
           />
         )}
       
