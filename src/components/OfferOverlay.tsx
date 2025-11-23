@@ -26,9 +26,9 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
   isOpen,
   onClose,
   onAction,
-  targetPath = "/resume-optimizer",
+  targetPath = "/optimizer",
 
-  imageSrc,
+  imageSrc="https://img.sanishtech.com/u/d3c3a0693f8dfeff84478ac6f4b44977.png",
 
   showTextOverlay = false,
   headline = "🚀 Your Resume Isn’t Getting Shortlisted? Fix it in 60 Seconds.",
