@@ -26,9 +26,9 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
   isOpen,
   onClose,
   onAction,
-  targetPath = "/optimizer",
+  targetPath = "/resume-optimizer",
 
-  imageSrc="https://img.sanishtech.com/u/d3c3a0693f8dfeff84478ac6f4b44977.png",
+  imageSrc,
 
   showTextOverlay = false,
   headline = "🚀 Your Resume Isn’t Getting Shortlisted? Fix it in 60 Seconds.",
@@ -36,7 +36,7 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
   footnote = "🔥 Limited free credits today.",
   ctaLabel = "Optimize Resume Now",
 
-  fit = "contain",
+  fit = "cover", // IMPORTANT: perfect image display
 }) => {
   const navigate = useNavigate();
   if (!isOpen) return null;
@@ -59,7 +59,7 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
       <div className="relative w-full max-w-4xl">
 
         {/* Glow Border */}
-        <div className="absolute -inset-1 rounded-[28px] bg-gradient-to-r from-yellow-400/20 via-orange-500/20 to-blue-500/20 blur-2xl opacity-80"></div>
+        <div className="absolute -inset-1 rounded-[28px] bg-gradient-to-r from-yellow-400/20 via-orange-500/20 to-blue-500/20 blur-2xl opacity-80" />
 
         <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-black">
 
@@ -85,27 +85,30 @@ export const OfferOverlay: React.FC<OfferOverlayProps> = ({
             <img
               src={imageSrc}
               alt="PrimoBoostAI Offer"
-              className={`w-full h-auto max-h-[80vh] object-${fit} block`}
+              className={`w-full h-auto max-h-[85vh] object-${fit} block`}
             />
 
-            {/* Bottom Fade for Text */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            {/* Soft gradient for readability */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
             {/* CTA + Footnote */}
-            <div className="absolute bottom-6 left-6 z-30">
-              <div className="inline-flex items-center gap-2 px-5 py-2.5 
+            <div className="absolute bottom-8 left-8 z-30 flex flex-col">
+
+              {/* CTA Pill */}
+              <div className="inline-flex items-center gap-2 px-6 py-3 
                 rounded-full bg-white/15 backdrop-blur-md
-                border border-white/25 text-white font-semibold">
+                border border-white/25 text-white font-semibold text-base">
                 {ctaLabel}
                 <span className="text-white/60 text-sm">→ Open Optimizer</span>
               </div>
 
-              <div className="mt-3 text-orange-300 font-bold text-sm sm:text-base">
+              {/* Footnote */}
+              <div className="mt-3 text-orange-300 font-semibold text-sm">
                 {footnote}
               </div>
             </div>
 
-            {/* Optional Text Overlay (if using plain images) */}
+            {/* OPTIONAL text overlay for plain images */}
             {showTextOverlay && (
               <div className="absolute inset-0 z-20 flex flex-col justify-end p-6">
                 <h2 className="text-white text-3xl font-bold drop-shadow-lg">
