@@ -83,6 +83,7 @@ export const MissingSectionsModal: React.FC<MissingSectionsModalProps> = ({
   const [skills, setSkills] = useState<Skill[]>([
     { category: '', count: 0, list: [] }
   ]);
+  const [skillInputs, setSkillInputs] = useState<string[]>(['']);
   const [education, setEducation] = useState<Education[]>([
     { degree: '', school: '', year: '', cgpa: '', location: '' }
   ]);
@@ -177,6 +178,7 @@ export const MissingSectionsModal: React.FC<MissingSectionsModalProps> = ({
 
   const addSkillCategory = () => {
     setSkills([...skills, { category: '', count: 0, list: [] }]);
+    setSkillInputs([...skillInputs, '']);
   };
 
   const updateSkillCategory = (index: number, field: keyof Skill, value: any) => {
@@ -192,6 +194,7 @@ export const MissingSectionsModal: React.FC<MissingSectionsModalProps> = ({
   const removeSkillCategory = (index: number) => {
     if (skills.length > 1) {
       setSkills(skills.filter((_, i) => i !== index));
+      setSkillInputs(skillInputs.filter((_, i) => i !== index));
     }
   };
 
@@ -201,6 +204,11 @@ export const MissingSectionsModal: React.FC<MissingSectionsModalProps> = ({
       updated[categoryIndex].list.push(skill.trim());
       updated[categoryIndex].count = updated[categoryIndex].list.length;
       setSkills(updated);
+      setSkillInputs((prev) => {
+        const next = [...prev];
+        next[categoryIndex] = '';
+        return next;
+      });
     }
   };
 
@@ -611,12 +619,16 @@ export const MissingSectionsModal: React.FC<MissingSectionsModalProps> = ({
             <div className="flex flex-col sm:flex-row gap-2 mb-2">
               <input
                 type="text"
-                value={''}
-                onChange={(e) => { /* No direct state update here */ }}
-                onKeyPress={(e) => {
+                value={skillInputs[categoryIndex] || ''}
+                onChange={(e) => {
+                  const next = [...skillInputs];
+                  next[categoryIndex] = e.target.value;
+                  setSkillInputs(next);
+                }}
+                onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    addSkillToCategory(categoryIndex, e.currentTarget.value);
-                    e.currentTarget.value = '';
+                    e.preventDefault();
+                    addSkillToCategory(categoryIndex, skillInputs[categoryIndex] || '');
                   }
                 }}
                 placeholder="e.g., JavaScript, React, Node.js"
@@ -624,11 +636,7 @@ export const MissingSectionsModal: React.FC<MissingSectionsModalProps> = ({
               />
               <button
                 onClick={() => {
-                  const inputElement = document.querySelector<HTMLInputElement>(`input[placeholder="e.g., JavaScript, React, Node.js"]`);
-                  if (inputElement) {
-                    addSkillToCategory(categoryIndex, inputElement.value);
-                    inputElement.value = '';
-                  }
+                  addSkillToCategory(categoryIndex, skillInputs[categoryIndex] || '');
                 }}
                 className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-3 py-3 rounded-lg transition-colors text-sm min-h-[44px]"
               >
