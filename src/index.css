@@ -76,7 +76,7 @@ h2 {
   
   /* Button base styles */
   .btn-base {
-    @apply inline-flex items-center justify-center min-w-button min-h-button px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-dark-100;
+    @apply inline-flex items-center justify-center min-w-button min-h-button px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-dark-100;
   }
   
   .btn-primary {
@@ -86,15 +86,19 @@ h2 {
   .btn-secondary {
     @apply btn-base bg-secondary-100 text-secondary-700 hover:bg-secondary-200 active:bg-secondary-300 focus:ring-secondary-500 dark:bg-dark-200 dark:text-gray-300 dark:hover:bg-dark-300 dark:focus:ring-neon-cyan-500;
   }
-  
+
   /* Card styles */
+  .card-surface {
+    @apply rounded-2xl border border-secondary-200/80 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:bg-dark-100 dark:border-dark-300/80 dark:shadow-dark-lg;
+  }
+
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-secondary-200 overflow-hidden dark:bg-dark-50 dark:border-dark-300 dark:shadow-dark-lg; /* Changed dark:bg-dark-100 to dark:bg-dark-50 */
+    @apply card-surface p-5 sm:p-6;
   }
   
-.card-hover {
-  @apply card transition-all duration-300 hover:shadow-lg hover:scale-[1.02] cursor-pointer dark:hover:shadow-dark-xl dark:hover:shadow-neon-cyan;
-}
+  .card-hover {
+    @apply card transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer dark:hover:shadow-dark-xl dark:hover:shadow-neon-cyan;
+  }
 
   
   /* Input styles */
