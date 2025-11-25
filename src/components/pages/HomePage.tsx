@@ -25,6 +25,7 @@ import {
   Globe,
   Gamepad2
 } from 'lucide-react';
+import { Card } from "../common/Card";
 // Assuming these imports exist in the user's project
 // import { paymentService } from '../../services/paymentService';
 
@@ -274,10 +275,10 @@ export const HomePage: React.FC<HomePageProps> = ({
         <div className="absolute top-1/2 left-1/2 w-56 h-56 bg-green-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000 dark:bg-neon-cyan-500"></div>
 
         <div className="relative container-responsive py-12 sm:py-16 lg:py-20">
-          <div className="text-center max-w-4xl mx-auto">
+          <div className="text-center max-w-4xl mx-auto space-y-6 sm:space-y-8">
             {/* Logo and Brand */}
-            <div className="flex items-center justify-center mb-6">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden shadow-xl mr-4">
+            <div className="flex items-center justify-center gap-4">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden shadow-xl">
                 <img
                   src="https://res.cloudinary.com/dlkovvlud/image/upload/w_1000,c_fill,ar_1:1,g_auto,r_max,bo_5px_solid_red,b_rgb:262c35/v1751536902/a-modern-logo-design-featuring-primoboos_XhhkS8E_Q5iOwxbAXB4CqQ_HnpCsJn4S1yrhb826jmMDw_nmycqj.jpg"
                   alt="PrimoBoost AI Logo"
@@ -285,58 +286,60 @@ export const HomePage: React.FC<HomePageProps> = ({
                 />
               </div>
               <div className="text-left">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-gray-100">
+                <h1 className="text-[22px] sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
                   PrimoBoost AI
                 </h1>
                 <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Resume Intelligence</p>
               </div>
             </div>
 
-            {/* Main Headline */}
-            <h2 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-gray-900 dark:text-gray-100 mb-6 leading-tight">
-              Your Dream Job Starts with a
-              <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-neon-cyan-400 dark:to-neon-blue-400">
-                Perfect Resume
-              </span>
-            </h2>
+            <div className="space-y-5 sm:space-y-6">
+              <h2 className="text-[26px] sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                Your Dream Job Starts with a
+                <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-neon-cyan-400 dark:to-neon-blue-400">
+                  Perfect Resume
+                </span>
+              </h2>
 
-            {/* Subheadline Readability */}
-            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-3xl mx-auto">
-              Choose your path to success. Whether you're building from scratch, <br /> optimizing for specific jobs, or just want to check your current resume score - we've got you covered.
-            </p>
+              <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300 leading-relaxed max-w-3xl mx-auto">
+                Choose your path to success. Whether you're building from scratch, optimizing for specific jobs, or just want to check your current resume score - we've got you covered.
+              </p>
+            </div>
 
             {/* Hero CTA Button */}
-            <button
-              onClick={() => navigate('/optimizer')}
-              className="btn-primary px-8 py-4 rounded-2xl text-lg font-bold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 mb-12"
-            >
-              <Sparkles className="w-6 h-6 mr-2" />
-              Start Optimize  Resume
-             
-            </button>
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center mt-2">
+              <button
+                onClick={() => navigate('/optimizer')}
+                className="btn-primary h-12 px-6 sm:px-7 rounded-xl text-base sm:text-lg font-semibold gap-2 shadow-lg hover:shadow-xl"
+              >
+                <Sparkles className="w-5 h-5" />
+                Start Building My Resume
+              </button>
+            </div>
 
             {/* Quick Stats */}
-            <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-12 justify-items-stretch">
+            <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5 pt-2">
               {stats.map((stat, index) => (
-                <div
+                <Card
                   key={index}
-                  className="card-hover bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-lg transition-all duration-300 border border-white/50 dark:bg-dark-100/80 dark:border-dark-300/50 dark:hover:shadow-neon-cyan/20 h-full flex flex-col items-center text-center"
+                  padding="md"
+                  className="card-surface text-left flex items-start gap-3 sm:gap-4"
                 >
-                  <div className="flex items-center justify-center mb-3">
-                    <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-2 sm:p-3 rounded-full dark:from-neon-cyan-500 dark:to-neon-blue-500 dark:shadow-neon-cyan">
-                      {stat.icon}
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 dark:bg-dark-200 dark:text-white">
+                    {React.cloneElement(stat.icon, { className: "w-5 h-5" })}
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                      {stat.number}
                     </div>
+                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      {stat.label}
+                    </div>
+                    {stat.microcopy && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{stat.microcopy}</p>
+                    )}
                   </div>
-                  <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-                    {stat.number}
-                  </div>
-                  <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
-                    {stat.label}
-                  </div>
-                  {stat.microcopy && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{stat.microcopy}</p>
-                  )}
-                </div>
+                </Card>
               ))}
             </div>
           </div>
@@ -350,75 +353,87 @@ export const HomePage: React.FC<HomePageProps> = ({
             Choose Your Resume Journey
           </h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-  {features.map((feature, index) => {
-    let remainingCount: number | null = null;
-    if (isAuthenticated && userSubscription) {
-      switch (feature.id) {
-        case 'optimizer':
-          remainingCount = userSubscription.optimizationsTotal - userSubscription.optimizationsUsed;
-          break;
-        case 'score-checker':
-          remainingCount = userSubscription.scoreChecksTotal - userSubscription.scoreChecksUsed;
-          break;
-        case 'guided-builder':
-          remainingCount = null; // Guided builder doesn't use credits
-          break;
-        case 'linkedin-generator':
-          remainingCount = null; // Free - no payment required
-          break;
-        case 'mock-interview':
-          remainingCount = null; // Free - no payment required
-          break;
-        case 'portfolio-builder':
-          remainingCount = null; // Free - no payment required
-          break;
-        case '/gaming':
-          remainingCount = null; // Free - no payment required
-          break;
-        default:
-          remainingCount = null;
-      }
-    }
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+          {features.map((feature, index) => {
+            let remainingCount: number | null = null;
+            if (isAuthenticated && userSubscription) {
+              switch (feature.id) {
+                case 'optimizer':
+                  remainingCount = userSubscription.optimizationsTotal - userSubscription.optimizationsUsed;
+                  break;
+                case 'score-checker':
+                  remainingCount = userSubscription.scoreChecksTotal - userSubscription.scoreChecksUsed;
+                  break;
+                case 'guided-builder':
+                  remainingCount = null;
+                  break;
+                case 'linkedin-generator':
+                  remainingCount = null;
+                  break;
+                case 'mock-interview':
+                  remainingCount = null;
+                  break;
+                case 'portfolio-builder':
+                  remainingCount = null;
+                  break;
+                case '/gaming':
+                  remainingCount = null;
+                  break;
+                default:
+                  remainingCount = null;
+              }
+            }
 
-    return (
-      <motion.button
-        key={feature.id}
-        onClick={() => handleFeatureClick(feature)}
-        className={`relative card-hover p-6 flex flex-col items-start sm:flex-row sm:items-center justify-between transition-all duration-300 bg-gradient-to-br ${feature.gradient} border border-secondary-100 shadow-lg hover:shadow-xl group rounded-2xl dark:from-dark-100 dark:to-dark-200 dark:border-dark-300 dark:hover:shadow-neon-cyan/20 ${feature.requiresAuth && !isAuthenticated ? 'opacity-70 cursor-not-allowed' : ''} ${feature.highlight ? 'ring-2 ring-green-500 ring-offset-4 overflow-visible' : ''}`}
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.45, delay: index * 0.05 }}
-        whileHover={{ y: -4, scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-      >
-        {feature.highlight && (
-          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-            <span className="inline-flex items-center bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-              <Check className="w-3 h-3 mr-1" /> Recommended
-            </span>
-          </div>
-        )}
-        <div className="flex items-center space-x-4">
-          <div className="bg-primary-100 rounded-xl p-3 group-hover:bg-gradient-to-r group-hover:from-neon-cyan-500 group-hover:to-neon-blue-500 group-hover:text-white transition-all duration-300 shadow-sm flex-shrink-0 group-hover:scale-110 dark:bg-dark-200 dark:group-hover:shadow-neon-cyan">
-            {React.cloneElement(feature.icon, { className: "w-8 h-8" })}
-          </div>
-          <div>
-            <span className="text-lg font-bold text-secondary-900 dark:text-gray-100">{feature.title}</span>
-            <p className="text-sm text-secondary-700 dark:text-gray-300">{feature.description}</p>
-            {isAuthenticated && userSubscription && remainingCount !== null && remainingCount > 0 && (
-              <p className="text-xs font-medium text-green-600 dark:text-neon-cyan-400 mt-1">
-                {remainingCount} remaining
-              </p>
-            )}
-          </div>
+            return (
+              <Card
+                as={motion.button}
+                key={feature.id}
+                onClick={() => handleFeatureClick(feature)}
+                padding="lg"
+                className={`relative text-left transition-all duration-300 bg-gradient-to-br ${feature.gradient} border border-secondary-100/70 hover:shadow-lg group ${
+                  feature.requiresAuth && !isAuthenticated ? 'opacity-70 cursor-not-allowed' : ''
+                } ${feature.highlight ? 'ring-2 ring-green-500 ring-offset-2 overflow-visible' : ''}`}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.45, delay: index * 0.05 }}
+                whileHover={{ y: -2, scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                {feature.highlight && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <span className="inline-flex items-center bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                      <Check className="w-3 h-3 mr-1" /> Recommended
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/90 text-secondary-900 shadow-sm group-hover:scale-110 transition dark:bg-dark-200 dark:text-gray-100">
+                    {React.cloneElement(feature.icon, { className: "w-6 h-6" })}
+                  </div>
+                  <div className="flex-1 space-y-1.5">
+                    <span className="block text-[16px] font-semibold text-secondary-900 dark:text-gray-100 leading-snug">
+                      {feature.title}
+                    </span>
+                    <p className="text-sm text-secondary-700 dark:text-gray-300 leading-relaxed">
+                      {feature.description}
+                    </p>
+                    {isAuthenticated && userSubscription && remainingCount !== null && remainingCount > 0 && (
+                      <p className="text-xs font-medium text-green-600 dark:text-neon-cyan-400">
+                        {remainingCount} remaining
+                      </p>
+                    )}
+                  </div>
+                  <ArrowRight
+                    className={`w-5 h-5 text-secondary-400 group-hover:text-neon-cyan-400 group-hover:translate-x-1 transition-transform duration-300 ${
+                      feature.requiresAuth && !isAuthenticated ? 'opacity-50' : ''
+                    }`}
+                  />
+                </div>
+              </Card>
+            );
+          })}
         </div>
-        <ArrowRight className={`w-6 h-6 text-secondary-400 group-hover:text-neon-cyan-400 group-hover:translate-x-1 transition-transform duration-300 flex-shrink-0 dark:text-gray-500 dark:group-hover:text-neon-cyan-400 ${feature.requiresAuth && !isAuthenticated ? 'opacity-50' : ''}`} />
-      </motion.button>
-    );
-  })}
-</div>
 
       </div>
 
