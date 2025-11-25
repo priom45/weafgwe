@@ -86,7 +86,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const navigate = useNavigate(); // Initialize useNavigate
   const { user } = useAuth(); // ADDED: Access user from AuthContext
   const [globalResumesCreated, setGlobalResumesCreated] = useState<number>(60070);
-  const [scoreChecksCompleted, setScoreChecksCompleted] = useState<number>(500);
+  const [scoreChecksCompleted, setScoreChecksCompleted] = useState<number>(500070);
 
   // Fetch global resumes created count on component mount
   useEffect(() => {
@@ -105,7 +105,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   // Load and listen for local resume score check count (base 500 + user increments)
   useEffect(() => {
-    const base = 500;
+    const base = 500070;
     const hydrateCount = () => {
       const stored = parseInt(localStorage.getItem('scoreCheckCount') || '0', 10);
       const safeStored = isNaN(stored) ? 0 : stored;
@@ -251,16 +251,38 @@ export const HomePage: React.FC<HomePageProps> = ({
       number: scoreChecksCompleted.toLocaleString(),
       label: 'Resume Score Checks',
       icon: <TrendingUp className="w-5 h-5" />,
-      microcopy: 'Completed by members to optimize their resumes'
+      microcopy: 'Completed by members to optimize their resumes',
+      accentBg: 'from-blue-50 to-cyan-50',
+      accentRing: 'ring-blue-100/70',
+      accentText: 'text-blue-700'
     },
     {
       number: globalResumesCreated.toLocaleString(),
       label: 'Resumes Created', 
       icon: <FileText className="w-5 h-5" />, 
-      microcopy: 'Trusted by thousands of job seekers worldwide' 
+      microcopy: 'Trusted by thousands of job seekers worldwide',
+      accentBg: 'from-indigo-50 to-blue-50',
+      accentRing: 'ring-indigo-100/70',
+      accentText: 'text-indigo-700'
     },
-    { number: '95%', label: 'Success Rate', icon: <TrendingUp className="w-5 h-5" />, microcopy: 'Achieved by our AI-driven approach' },
-    { number: '4.9/5', label: 'User Rating', icon: <Star className="w-5 h-5" />, microcopy: 'From satisfied professionals worldwide' }
+    {
+      number: '95%',
+      label: 'Success Rate',
+      icon: <TrendingUp className="w-5 h-5" />,
+      microcopy: 'Achieved by our AI-driven approach',
+      accentBg: 'from-emerald-50 to-green-50',
+      accentRing: 'ring-emerald-100/70',
+      accentText: 'text-emerald-700'
+    },
+    {
+      number: '4.9/5',
+      label: 'User Rating',
+      icon: <Star className="w-5 h-5" />,
+      microcopy: 'From satisfied professionals worldwide',
+      accentBg: 'from-sky-50 to-indigo-50',
+      accentRing: 'ring-sky-100/70',
+      accentText: 'text-sky-700'
+    }
   ];
 
   return (
@@ -317,25 +339,27 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
 
             {/* Quick Stats */}
-            <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5 pt-2">
+            <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 pt-2">
               {stats.map((stat, index) => (
                 <Card
                   key={index}
-                  padding="md"
-                  className="card-surface text-left flex items-start gap-3 sm:gap-4"
+                  padding="lg"
+                  className="card-surface text-left flex items-start gap-3 sm:gap-4 hover:shadow-lg hover:-translate-y-0.5 transition"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 dark:bg-dark-200 dark:text-white">
-                    {React.cloneElement(stat.icon, { className: "w-5 h-5" })}
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-b ${stat.accentBg} ${stat.accentRing} ring-2 ring-inset text-blue-700 dark:bg-dark-200 dark:text-white`}>
+                    {React.cloneElement(stat.icon, { className: `w-5 h-5 ${stat.accentText}` })}
                   </div>
                   <div className="space-y-1">
-                    <div className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    <div className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
                       {stat.number}
                     </div>
-                    <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-200 leading-snug">
                       {stat.label}
                     </div>
                     {stat.microcopy && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{stat.microcopy}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                        {stat.microcopy}
+                      </p>
                     )}
                   </div>
                 </Card>
