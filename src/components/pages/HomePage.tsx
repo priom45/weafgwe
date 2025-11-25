@@ -85,7 +85,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [showPlanDetails, setShowPlanDetails] = React.useState(false); // New state for the dropdown
   const navigate = useNavigate(); // Initialize useNavigate
   const { user } = useAuth(); // ADDED: Access user from AuthContext
-  const [globalResumesCreated, setGlobalResumesCreated] = useState<number>(50000);
+  const [globalResumesCreated, setGlobalResumesCreated] = useState<number>(60070);
   const [scoreChecksCompleted, setScoreChecksCompleted] = useState<number>(500);
 
   // Fetch global resumes created count on component mount
@@ -260,8 +260,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       microcopy: 'Trusted by thousands of job seekers worldwide' 
     },
     { number: '95%', label: 'Success Rate', icon: <TrendingUp className="w-5 h-5" />, microcopy: 'Achieved by our AI-driven approach' },
-    { number: '4.9/5', label: 'User Rating', icon: <Star className="w-5 h-5" />, microcopy: 'From satisfied professionals worldwide' },
-    { number: '24/7', label: 'AI Support', icon: <Sparkles className="w-5 h-5" />, microcopy: 'Instant assistance whenever you need it' }
+    { number: '4.9/5', label: 'User Rating', icon: <Star className="w-5 h-5" />, microcopy: 'From satisfied professionals worldwide' }
   ];
 
   return (
