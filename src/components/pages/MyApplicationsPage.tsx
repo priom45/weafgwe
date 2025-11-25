@@ -24,6 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { ApplicationLog, ApplicationHistory } from '../../types/jobs';
 import { jobsService } from '../../services/jobsService';
+import { Card } from "../common/Card";
 
 interface MyApplicationsPageProps {
   isAuthenticated: boolean;
@@ -115,65 +116,59 @@ export const MyApplicationsPage: React.FC<MyApplicationsPageProps> = ({
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-dark-50 dark:to-dark-200 transition-colors duration-300">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40 dark:bg-dark-50 dark:border-dark-300">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16 py-3">
+        <div className="container-responsive">
+          <div className="flex items-center justify-between h-16 py-4">
             <button
               onClick={() => navigate('/jobs')}
-              className="bg-gradient-to-r from-neon-cyan-500 to-neon-blue-500 text-white hover:from-neon-cyan-400 hover:to-neon-blue-400 py-3 px-5 rounded-xl inline-flex items-center space-x-2 transition-all duration-200"
+              className="btn-secondary h-11 px-4 rounded-xl inline-flex items-center gap-2"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="hidden sm:block">Back to Jobs</span>
+              <span className="hidden sm:block text-sm font-semibold">Back to Jobs</span>
             </button>
             <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">My Applications</h1>
             <button
               onClick={loadApplicationHistory}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-700 p-2 rounded-lg transition-colors dark:bg-dark-300 dark:hover:bg-dark-400 dark:text-gray-300"
+              className="btn-primary h-11 px-4 rounded-xl flex items-center gap-2"
             >
-              <RefreshCw className="w-5 h-5" />
+              <RefreshCw className="w-4 h-4" />
+              <span className="text-sm font-semibold">Refresh</span>
             </button>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container-responsive py-8">
         {/* Stats */}
         {history && (
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
-            <div className="bg-white rounded-xl shadow-lg p-4 text-center dark:bg-dark-100">
-              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{history.stats.total}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Total</div>
-            </div>
-            <div className="bg-white rounded-xl shadow-lg p-4 text-center dark:bg-dark-100">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{history.stats.submitted}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Submitted</div>
-            </div>
-            <div className="bg-white rounded-xl shadow-lg p-4 text-center dark:bg-dark-100">
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{history.stats.pending}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Pending</div>
-            </div>
-            <div className="bg-white rounded-xl shadow-lg p-4 text-center dark:bg-dark-100">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{history.stats.manual}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Manual</div>
-            </div>
-            <div className="bg-white rounded-xl shadow-lg p-4 text-center dark:bg-dark-100">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{history.stats.auto}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Auto</div>
-            </div>
-            <div className="bg-white rounded-xl shadow-lg p-4 text-center dark:bg-dark-100">
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">{history.stats.failed}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Failed</div>
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5 mb-8">
+            {[
+              { label: "Total", value: history.stats.total, color: "text-gray-900 dark:text-gray-100" },
+              { label: "Submitted", value: history.stats.submitted, color: "text-green-600 dark:text-green-400" },
+              { label: "Pending", value: history.stats.pending, color: "text-yellow-600 dark:text-yellow-400" },
+              { label: "Manual", value: history.stats.manual, color: "text-blue-600 dark:text-blue-400" },
+              { label: "Auto", value: history.stats.auto, color: "text-purple-600 dark:text-purple-400" },
+              { label: "Failed", value: history.stats.failed, color: "text-red-600 dark:text-red-400" }
+            ].map((item) => (
+              <Card key={item.label} padding="md" className="text-left space-y-1">
+                <div className={`text-xl font-bold ${item.color}`}>{item.value}</div>
+                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">{item.label}</div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Updated live as you apply</p>
+              </Card>
+            ))}
           </div>
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8 dark:bg-dark-100">
-          <div className="flex items-center space-x-4">
-            <Filter className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+        <Card padding="md" className="mb-8">
+          <div className="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            <Filter className="w-5 h-5 text-blue-600 dark:text-neon-cyan-400" />
+            <span>Filter applications</span>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
             <select
               value={filters.status || ''}
               onChange={(e) => setFilters({ ...filters, status: e.target.value || undefined })}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-dark-200 dark:border-dark-300 dark:text-gray-100"
+              className="h-11 rounded-xl px-3 border border-gray-300 focus:ring-2 focus:ring-blue-500 dark:bg-dark-200 dark:border-dark-300 dark:text-gray-100"
             >
               <option value="">All Status</option>
               <option value="submitted">Submitted</option>
@@ -183,14 +178,14 @@ export const MyApplicationsPage: React.FC<MyApplicationsPageProps> = ({
             <select
               value={filters.method || ''}
               onChange={(e) => setFilters({ ...filters, method: e.target.value || undefined })}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-dark-200 dark:border-dark-300 dark:text-gray-100"
+              className="h-11 rounded-xl px-3 border border-gray-300 focus:ring-2 focus:ring-blue-500 dark:bg-dark-200 dark:border-dark-300 dark:text-gray-100"
             >
               <option value="">All Methods</option>
               <option value="manual">Manual</option>
               <option value="auto">Auto</option>
             </select>
           </div>
-        </div>
+        </Card>
 
         {/* Applications List */}
         {isLoading ? (
@@ -207,96 +202,106 @@ export const MyApplicationsPage: React.FC<MyApplicationsPageProps> = ({
         ) : history && history.applications.length > 0 ? (
           <div className="space-y-4">
             {history.applications.map((application, index) => (
-              <motion.div
+              <Card
+                as={motion.div}
                 key={application.application_id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden dark:bg-dark-100 dark:border-dark-300"
+                padding="lg"
+                className="border border-gray-200 overflow-hidden dark:border-dark-300"
               >
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
-                        {application.role_title}
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-300 font-medium">
-                        {application.company_name}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center ${getStatusColor(application.status)}`}>
-                        {getStatusIcon(application.status)}
-                        <span className="ml-1 capitalize">{application.status}</span>
-                      </span>
-                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium flex items-center dark:bg-blue-900/20 dark:text-blue-300">
-                        {getMethodIcon(application.application_method)}
-                        <span className="ml-1 capitalize">{application.application_method}</span>
-                      </span>
-                    </div>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-snug">
+                      {application.role_title}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                      {application.company_name}
+                    </p>
                   </div>
-
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    <span>Applied on {new Date(application.application_date).toLocaleDateString()}</span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-3">
-                    {application.resume_pdf_url && (
-                      <a
-                        href={application.resume_pdf_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center space-x-2 bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30"
-                      >
-                        <Download className="w-4 h-4" />
-                        <span>Resume</span>
-                      </a>
-                    )}
-
-                    {application.screenshot_url && (
-                      <a
-                        href={application.screenshot_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center space-x-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg hover:bg-green-200 transition-colors text-sm dark:bg-green-900/20 dark:text-green-300 dark:hover:bg-green-900/30"
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span>Screenshot</span>
-                      </a>
-                    )}
-
-                    {application.redirect_url && (
-                      <a
-                        href={application.redirect_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center space-x-2 bg-purple-100 text-purple-700 px-3 py-2 rounded-lg hover:bg-purple-200 transition-colors text-sm dark:bg-purple-900/20 dark:text-purple-300 dark:hover:bg-purple-900/30"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        <span>Job Link</span>
-                      </a>
-                    )}
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center ${getStatusColor(application.status)}`}>
+                      {getStatusIcon(application.status)}
+                      <span className="ml-1 capitalize">{application.status}</span>
+                    </span>
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold flex items-center dark:bg-blue-900/20 dark:text-blue-300">
+                      {getMethodIcon(application.application_method)}
+                      <span className="ml-1 capitalize">{application.application_method}</span>
+                    </span>
                   </div>
                 </div>
-              </motion.div>
+
+                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  <span>Applied on {new Date(application.application_date).toLocaleDateString()}</span>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  {application.resume_pdf_url && (
+                    <a
+                      href={application.resume_pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-2 rounded-xl hover:bg-blue-200 transition-colors text-sm font-semibold dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Resume</span>
+                    </a>
+                  )}
+
+                  {application.screenshot_url && (
+                    <a
+                      href={application.screenshot_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-xl hover:bg-green-200 transition-colors text-sm font-semibold dark:bg-green-900/20 dark:text-green-300 dark:hover:bg-green-900/30"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span>Screenshot</span>
+                    </a>
+                  )}
+
+                  {application.redirect_url && (
+                    <a
+                      href={application.redirect_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 bg-purple-100 text-purple-700 px-3 py-2 rounded-xl hover:bg-purple-200 transition-colors text-sm font-semibold dark:bg-purple-900/20 dark:text-purple-300 dark:hover:bg-purple-900/30"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span>Job Link</span>
+                    </a>
+                  )}
+                </div>
+              </Card>
             ))}
           </div>
         ) : (
           <div className="text-center py-12">
-            <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 dark:bg-dark-200">
-              <FileText className="w-10 h-10 text-gray-600 dark:text-gray-400" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No Applications Yet</h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Start applying to jobs to see your application history here.
-            </p>
-            <button
-              onClick={() => navigate('/jobs')}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
-            >
-              Explore Jobs
-            </button>
+            <Card className="max-w-md mx-auto text-center space-y-4">
+              <div className="bg-gray-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto dark:bg-dark-200">
+                <FileText className="w-10 h-10 text-gray-600 dark:text-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">No Applications Yet</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                Start applying to jobs to see your application history here.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                <button
+                  onClick={() => navigate('/jobs')}
+                  className="btn-primary h-12 px-5 rounded-xl text-sm font-semibold"
+                >
+                  Explore Jobs
+                </button>
+                <button
+                  onClick={loadApplicationHistory}
+                  className="btn-secondary h-12 px-5 rounded-xl text-sm font-semibold"
+                >
+                  Refresh
+                </button>
+              </div>
+            </Card>
           </div>
         )}
       </div>
