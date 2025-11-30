@@ -239,6 +239,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
     fontSize: ptToPx(PDF_CONFIG.fonts.body.size),
     fontFamily: `${PDF_CONFIG.fontFamily}, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif`,
     lineHeight: PDF_CONFIG.spacing.lineHeight,
+    color: '#000000',
   };
 
   const listItemStyle: React.CSSProperties = {

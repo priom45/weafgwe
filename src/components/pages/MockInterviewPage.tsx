@@ -63,11 +63,15 @@ export const MockInterviewPage: React.FC<MockInterviewPageProps> = ({
     setInterviewConfig(config);
     setSelectedResume(resume);
     setCurrentStage('interview');
+    // Add session=active to URL to hide sidebar during interview
+    navigate('/mock-interview?session=active', { replace: true });
   };
 
   const handleInterviewComplete = (sessionId: string) => {
     setCompletedSessionId(sessionId);
     setCurrentStage('summary');
+    // Remove session parameter when interview ends
+    navigate('/mock-interview', { replace: true });
   };
 
   const handleRetakeInterview = () => {
@@ -75,6 +79,8 @@ export const MockInterviewPage: React.FC<MockInterviewPageProps> = ({
     setInterviewConfig(null);
     setSelectedResume(null);
     setCompletedSessionId(null);
+    // Remove session parameter
+    navigate('/mock-interview', { replace: true });
   };
 
   const handleBackToSetup = () => {

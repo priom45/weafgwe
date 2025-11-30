@@ -430,7 +430,8 @@ const handleDiwaliCTAClick = useCallback(() => {
   console.log('App.tsx: showPlanSelectionModal state before PlanSelectionModal render:', showPlanSelectionModal);
 
   // Check if we're in interview mode OR reset password mode
-  const isInterviewMode = location.pathname.includes('/mock-interview');
+  // Only hide sidebar during active interview session (when ?session=active is in URL)
+  const isInterviewMode = location.pathname.includes('/mock-interview') && location.search.includes('session=active');
   const isResetPasswordMode = location.pathname === '/reset-password';
 
   // Check if it's Christmas season
