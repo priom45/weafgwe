@@ -16,6 +16,7 @@ import {
   Briefcase,
   FileText,
   Sparkles,
+  CreditCard,
 } from 'lucide-react';
 
 // Interfaces
@@ -59,6 +60,7 @@ const pagesSection: SidebarSection = {
   label: 'Explore',
   items: [
     { id: 'jobs', label: 'Explore Jobs', icon: <Briefcase className="w-5 h-5" />, path: '/jobs' },
+    { id: 'pricing', label: 'Pricing', icon: <CreditCard className="w-5 h-5" />, path: '/pricing' },
     { id: 'blog', label: 'Blog', icon: <FileText className="w-5 h-5" />, path: '/blog' },
     { id: 'webinars', label: 'Webinars', icon: <Sparkles className="w-5 h-5" />, path: '/webinars' },
     { id: 'tutorials', label: 'Tutorials', icon: <BookOpen className="w-5 h-5" />, path: '/tutorials' },

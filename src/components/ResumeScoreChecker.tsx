@@ -55,16 +55,16 @@ const containerVariants = {
       delayChildren: 0.2
     }
   }
-};
+} as const;
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: "easeOut" }
+    transition: { duration: 0.5, ease: "easeOut" as const }
   }
-};
+} as const;
 import { FileUpload } from './FileUpload';
 import { getComprehensiveScore } from '../services/scoringService';
 import { LoadingAnimation } from './LoadingAnimation';
@@ -198,7 +198,7 @@ export const ResumeScoreChecker: React.FC<ResumeScoreCheckerProps> = ({
         extractionResult.text,
         scoringMode === 'jd_based' ? jobDescription : undefined,
         scoringMode === 'jd_based' ? jobTitle : undefined,
-        scoringMode,
+        scoringMode ?? undefined,
         extractionResult.extraction_mode,
         extractionResult.trimmed,
         uploadedFilename // Pass the filename here
@@ -355,7 +355,7 @@ if (hasScoreCheckCredits) {
 
       const attemptAnalysis = async () => {
         while (retryCount < MAX_RETRIES_INTERNAL) {
-          const latestSub = await paymentService.getUserSubscription(user.id); // Re-fetch to be sure
+          const latestSub = await paymentService.getUserSubscription(user!.id); // Re-fetch to be sure
           if (latestSub && (latestSub.scoreChecksTotal - latestSub.scoreChecksUsed) > 0) {
             _analyzeResumeInternal(); // Now call the internal analysis function
             return;
@@ -789,246 +789,294 @@ if (hasScoreCheckCredits) {
             )}
 
             {currentStep === 2 && scoreResult && (
-              <div className="container-responsive">
-                <div className="max-w-4xl mx-auto">
+              <div className="container-responsive py-8">
+                <div className="max-w-5xl mx-auto space-y-6">
+                  
+                  {/* Cached Result Notice */}
                   {scoreResult.cached && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 dark:bg-neon-cyan-500/10 dark:border-neon-cyan-400/50">
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-cyan-500/10 border border-cyan-400/30 rounded-xl p-4"
+                    >
                       <div className="flex items-center">
-                        <Calendar className="w-5 h-5 text-blue-600 dark:text-neon-cyan-400 mr-2" />
-                        <span className="text-blue-800 dark:text-neon-cyan-300 font-medium">
-                          Cached Result - This analysis was free (expires {scoreResult.cache_expires_at ? new Date(scoreResult.cache_expires_at).toLocaleDateString() : 'soon'})
+                        <Calendar className="w-5 h-5 text-cyan-400 mr-2" />
+                        <span className="text-cyan-300 font-medium">
+                          Cached Result - Free analysis (expires {scoreResult.cache_expires_at ? new Date(scoreResult.cache_expires_at).toLocaleDateString() : 'soon'})
                         </span>
                       </div>
-                    </div>
+                    </motion.div>
                   )}
 
-                  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden dark:bg-dark-100 dark:border-dark-300 dark:shadow-dark-xl">
-                    <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 border-b border-gray-200 dark:from-dark-200 dark:to-dark-300 dark:border-dark-400">
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                        <Award className="w-5 h-5 mr-2 text-green-600 dark:text-neon-cyan-400" />
-                        Your Resume Score
-                      </h2>
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {extractionResult.extraction_mode === 'OCR' && (
-                          <span className="px-3 py-1 bg-orange-100 text-orange-800 text-xs rounded-full font-medium dark:bg-orange-900/20 dark:text-orange-300">
-                            <Eye className="w-3 h-3 inline mr-1" />
-                            OCR Used
+                  {/* Main Score Card */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-emerald-400/30 overflow-hidden shadow-[0_25px_80px_rgba(16,185,129,0.15)]"
+                  >
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 p-6 border-b border-emerald-400/20">
+                      <div className="flex items-center justify-between flex-wrap gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-xl bg-emerald-500/20 border border-emerald-400/40">
+                            <Award className="w-6 h-6 text-emerald-400" />
+                          </div>
+                          <h2 className="text-xl font-bold text-slate-100">Your Resume Score</h2>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {extractionResult.extraction_mode === 'OCR' && (
+                            <span className="px-3 py-1 bg-amber-500/20 text-amber-300 text-xs rounded-full font-medium border border-amber-400/30">
+                              <Eye className="w-3 h-3 inline mr-1" />
+                              OCR Used
+                            </span>
+                          )}
+                          <span className={`px-3 py-1 text-xs rounded-full font-medium border ${
+                            scoreResult.confidence === 'High' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30' :
+                            scoreResult.confidence === 'Medium' ? 'bg-amber-500/20 text-amber-300 border-amber-400/30' :
+                            'bg-red-500/20 text-red-300 border-red-400/30'
+                          }`}>
+                            <Shield className="w-3 h-3 inline mr-1" />
+                            {scoreResult.confidence} Confidence
                           </span>
-                        )}
-                        {extractionResult.trimmed && (
-                          <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium dark:bg-yellow-900/20 dark:text-yellow-300">
-                            <Info className="w-3 h-3 inline mr-1" />
-                            Content Trimmed
-                          </span>
-                        )}
-                        <span className={`px-3 py-1 text-xs rounded-full font-medium ${getConfidenceColor(scoreResult.confidence)}`}>
-                          <Shield className="w-3 h-3 inline mr-1" />
-                          {scoreResult.confidence} Confidence
-                        </span>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Score Display */}
                     <div className="p-8">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-center">
-                        <div className="text-center">
-                          <div className="relative w-32 h-32 mx-auto mb-4">
-                            <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
-                              <circle
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Score Circle */}
+                        <motion.div 
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.6, delay: 0.2 }}
+                          className="flex flex-col items-center"
+                        >
+                          <div className="relative w-40 h-40 mb-4">
+                            <svg className="w-40 h-40 transform -rotate-90" viewBox="0 0 120 120">
+                              <circle cx="60" cy="60" r="50" fill="none" stroke="#1e293b" strokeWidth="10" />
+                              <motion.circle
                                 cx="60"
                                 cy="60"
                                 r="50"
                                 fill="none"
-                                stroke="#e5e7eb"
-                                strokeWidth="8"
-                              />
-                              <circle
-                                cx="60"
-                                cy="60"
-                                r="50"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="8"
-                                strokeDasharray={`${(scoreResult.overall / 100) * 314} 314`}
+                                strokeWidth="10"
                                 strokeLinecap="round"
-                                className={`${getScoreColor(scoreResult.overall)} dark:stroke-neon-cyan-400`}
+                                initial={{ strokeDasharray: "0 314" }}
+                                animate={{ strokeDasharray: `${(scoreResult.overall / 100) * 314} 314` }}
+                                transition={{ duration: 1.5, ease: "easeOut" as const, delay: 0.3 }}
+                                className={`${
+                                  scoreResult.overall >= 80 ? 'stroke-emerald-400' :
+                                  scoreResult.overall >= 60 ? 'stroke-amber-400' : 'stroke-red-400'
+                                }`}
                               />
                             </svg>
                             <div className="absolute inset-0 flex items-center justify-center">
                               <div className="text-center">
-                                <div className={`text-3xl font-bold ${getScoreColor(scoreResult.overall)} dark:text-neon-cyan-400`}>
+                                <motion.div 
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  transition={{ delay: 0.8 }}
+                                  className={`text-5xl font-bold ${
+                                    scoreResult.overall >= 80 ? 'text-emerald-400' :
+                                    scoreResult.overall >= 60 ? 'text-amber-400' : 'text-red-400'
+                                  }`}
+                                >
                                   {scoreResult.overall}
-                                </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">Score</div>
+                                </motion.div>
+                                <div className="text-slate-400 text-sm">out of 100</div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="text-center">
-                          <div className="bg-gradient-to-br from-blue-50 to-purple-50 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 dark:from-neon-cyan-500/20 dark:to-neon-blue-500/20 dark:shadow-neon-cyan">
-                            <Award className="w-8 h-8 text-blue-600 dark:text-neon-cyan-400" />
+                          <div className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                            scoreResult.overall >= 80 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30' :
+                            scoreResult.overall >= 60 ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30' :
+                            'bg-red-500/20 text-red-300 border border-red-400/30'
+                          }`}>
+                            {scoreResult.overall >= 80 ? 'Excellent' : scoreResult.overall >= 60 ? 'Good' : 'Needs Work'}
                           </div>
-                          <div className={`text-lg font-bold ${getMatchBandColor(scoreResult.match_band)} mb-2`}>
-                            {scoreResult.match_band}
-                          </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">Match Quality</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="bg-gradient-to-br from-green-50 to-emerald-50 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 dark:from-neon-blue-500/20 dark:to-neon-purple-500/20 dark:shadow-neon-blue">
-                            <TrendingUp className="w-8 h-8 text-green-600 dark:text-neon-blue-400" />
-                          </div>
-                          <div className="text-lg font-bold text-green-600 dark:text-neon-blue-400 mb-2">
-                            {scoreResult.interview_probability_range}
-                          </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">Interview Chance</div>
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Overall Analysis</h3>
-                          <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm mb-4">{scoreResult.analysis}</p>
-                          <div className="space-y-2">
-                            <div className="bg-green-50 p-4 rounded-lg border border-green-200 dark:bg-neon-cyan-500/10 dark:border-neon-cyan-400/50">
-                              <h4 className="font-medium text-green-800 dark:text-neon-cyan-300 mb-1 text-xs">Key Strengths</h4>
-                              <div className="text-xs text-green-700 dark:text-gray-300">
-                                {scoreResult.keyStrengths.length} key strengths identified
+                        </motion.div>
+
+                        {/* Match Quality & Interview Chance */}
+                        <motion.div 
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: 0.4 }}
+                          className="flex flex-col gap-4"
+                        >
+                          <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700/50">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="p-2 rounded-lg bg-indigo-500/20 border border-indigo-400/30">
+                                <Award className="w-5 h-5 text-indigo-400" />
                               </div>
+                              <span className="text-slate-400 text-sm">Match Quality</span>
                             </div>
-                            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200 dark:bg-orange-900/20 dark:border-orange-500/50">
-                              <h4 className="font-medium text-orange-800 dark:text-orange-300 mb-1 text-xs">Areas for Improvement</h4>
-                              <div className="text-xs text-orange-700 dark:text-orange-400">
-                                {scoreResult.improvementAreas.length} areas for improvement
-                              </div>
+                            <div className={`text-2xl font-bold ${
+                              scoreResult.match_band === 'Excellent Match' ? 'text-emerald-400' :
+                              scoreResult.match_band === 'Good Match' ? 'text-cyan-400' :
+                              scoreResult.match_band === 'Fair Match' ? 'text-amber-400' : 'text-red-400'
+                            }`}>
+                              {scoreResult.match_band}
                             </div>
                           </div>
-                        </div>
+                          <div className="bg-slate-800/50 rounded-xl p-5 border border-slate-700/50">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="p-2 rounded-lg bg-emerald-500/20 border border-emerald-400/30">
+                                <TrendingUp className="w-5 h-5 text-emerald-400" />
+                              </div>
+                              <span className="text-slate-400 text-sm">Interview Chance</span>
+                            </div>
+                            <div className="text-2xl font-bold text-emerald-400">
+                              {scoreResult.interview_probability_range}
+                            </div>
+                          </div>
+                        </motion.div>
+
+                        {/* Analysis Summary */}
+                        <motion.div 
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: 0.5 }}
+                          className="bg-slate-800/50 rounded-xl p-5 border border-slate-700/50"
+                        >
+                          <h3 className="text-lg font-semibold text-slate-100 mb-3">Analysis Summary</h3>
+                          <p className="text-slate-300 text-sm leading-relaxed mb-4">{scoreResult.analysis}</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-lg p-3">
+                              <div className="text-emerald-400 font-bold text-lg">{scoreResult.keyStrengths.length}</div>
+                              <div className="text-emerald-300/70 text-xs">Strengths</div>
+                            </div>
+                            <div className="bg-amber-500/10 border border-amber-400/30 rounded-lg p-3">
+                              <div className="text-amber-400 font-bold text-lg">{scoreResult.improvementAreas.length}</div>
+                              <div className="text-amber-300/70 text-xs">To Improve</div>
+                            </div>
+                          </div>
+                        </motion.div>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
 
-                  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden dark:bg-dark-100 dark:border-dark-300 dark:shadow-dark-xl mt-6">
-                    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 border-b border-gray-200 dark:from-dark-200 dark:to-dark-300 dark:border-dark-400">
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                        <BarChart3 className="w-5 h-5 mr-2 text-indigo-600 dark:text-neon-purple-400" />
-                        16-Metric Detailed Breakdown
-                      </h2>
-                      <p className="text-gray-600 dark:text-gray-300 mt-1">Comprehensive analysis across all scoring criteria</p>
+                  {/* Detailed Breakdown */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                    className="bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-indigo-400/30 overflow-hidden"
+                  >
+                    <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 p-6 border-b border-indigo-400/20">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-indigo-500/20 border border-indigo-400/40">
+                          <BarChart3 className="w-6 h-6 text-indigo-400" />
+                        </div>
+                        <div>
+                          <h2 className="text-xl font-bold text-slate-100">Detailed Breakdown</h2>
+                          <p className="text-slate-400 text-sm">16-metric comprehensive analysis</p>
+                        </div>
+                      </div>
                     </div>
                     <div className="p-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {scoreResult.breakdown.map((metric, index) => (
-                          <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200 dark:bg-dark-200 dark:border-dark-300">
+                          <motion.div 
+                            key={index}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: 0.4 + index * 0.05 }}
+                            className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 hover:border-indigo-400/30 transition-colors"
+                          >
                             <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-semibold text-gray-800 dark:text-gray-100 text-sm">{metric.name}</h4>
-                              <span className="text-xs text-gray-500 dark:text-gray-400">{metric.weight_pct}%</span>
+                              <h4 className="font-semibold text-slate-200 text-sm">{metric.name}</h4>
+                              <span className="text-xs text-slate-500">{metric.weight_pct}% weight</span>
                             </div>
-                            <div className="flex items-center mb-2">
-                              <span className={`text-lg font-bold ${getCategoryScoreColor(metric.score, metric.max_score)} dark:text-neon-cyan-400`}>
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className={`text-xl font-bold ${
+                                (metric.score / metric.max_score) >= 0.8 ? 'text-emerald-400' :
+                                (metric.score / metric.max_score) >= 0.6 ? 'text-amber-400' : 'text-red-400'
+                              }`}>
                                 {metric.score}
                               </span>
-                              <span className="text-gray-500 dark:text-gray-400">/{metric.max_score}</span>
-                              <div className="ml-auto text-xs text-gray-600 dark:text-gray-400">
-                                +{metric.contribution.toFixed(1)} pts
-                              </div>
+                              <span className="text-slate-500">/ {metric.max_score}</span>
+                              <span className="ml-auto text-xs text-indigo-400">+{metric.contribution.toFixed(1)} pts</span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2 mb-2 dark:bg-dark-300">
-                              <div
-                                className={`h-2 rounded-full transition-all duration-300 ${
-                                  (metric.score / metric.max_score) >= 0.9 ? 'bg-green-500' :
-                                  (metric.score / metric.max_score) >= 0.7 ? 'bg-yellow-500' : 'bg-red-500'
+                            <div className="w-full bg-slate-700/50 rounded-full h-2 mb-2">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${(metric.score / metric.max_score) * 100}%` }}
+                                transition={{ duration: 0.8, delay: 0.5 + index * 0.05 }}
+                                className={`h-2 rounded-full ${
+                                  (metric.score / metric.max_score) >= 0.8 ? 'bg-emerald-500' :
+                                  (metric.score / metric.max_score) >= 0.6 ? 'bg-amber-500' : 'bg-red-500'
                                 }`}
-                                style={{ width: `${(metric.score / metric.max_score) * 100}%` }}
                               />
                             </div>
-                            <p className="text-xs text-gray-700 dark:text-gray-300">{metric.details}</p>
-                          </div>
+                            <p className="text-xs text-slate-400">{metric.details}</p>
+                          </motion.div>
                         ))}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
 
-                  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden dark:bg-dark-100 dark:border-dark-300 dark:shadow-dark-xl mt-6">
-                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 border-b border-gray-200 dark:from-dark-200 dark:to-dark-300 dark:border-dark-400">
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                        <Lightbulb className="w-5 h-5 mr-2 text-purple-600 dark:text-neon-purple-400" />
-                        Actionable Fixes
-                      </h2>
-                    </div>
-                    <div className="p-6">
-                      <ul className="space-y-3">
-                        {scoreResult.actions.length > 0 ? (
-                          scoreResult.actions.map((action, index) => (
-                            <li key={index} className="flex items-start">
-                              <ArrowRight className="w-5 h-5 text-purple-500 dark:text-neon-purple-400 mr-3 mt-0.5 flex-shrink-0" />
-                              <span className="text-gray-700 dark:text-gray-300">{action}</span>
-                            </li>
-                          ))
-                        ) : (
-                          <p className="text-gray-600 dark:text-gray-300 italic">No specific recommendations at this time. Your resume looks great!</p>
-                        )}
-                      </ul>
-                    </div>
-                  </div>
-
-                  {scoringMode === 'jd_based' && (
-                    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden dark:bg-dark-100 dark:border-dark-300 dark:shadow-dark-xl mt-6">
-                      <div className="bg-gradient-to-r from-neon-cyan-50 to-neon-blue-50 p-6 border-b border-gray-200 dark:from-dark-200 dark:to-dark-300 dark:border-dark-400">
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                          <FileText className="w-5 h-5 mr-2 text-neon-cyan-600 dark:text-neon-cyan-400" />
-                          Ready to Optimize?
-                        </h2>
-                      </div>
-                      <div className="p-6">
-                        <p className="text-gray-700 dark:text-gray-300 mb-4">
-                          Your resume score is a great first step. Now, let's use the full power of our JD-based optimizer to generate tailored resume bullets based on your job description.
-                        </p>
-                        <button
-                          onClick={() => navigate('/optimizer')}
-                          className="w-full bg-gradient-to-r from-neon-cyan-500 to-neon-blue-500 hover:from-neon-cyan-400 hover:to-neon-blue-400 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-neon-cyan flex items-center justify-center space-x-2"
-                        >
-                          <span>Go to JD-Based Resume Optimizer</span>
-                          <ArrowRight className="w-5 h-5" />
-                        </button>
+                  {/* Recommendations */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                    className="bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-purple-400/30 overflow-hidden"
+                  >
+                    <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-6 border-b border-purple-400/20">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-purple-500/20 border border-purple-400/40">
+                          <Lightbulb className="w-6 h-6 text-purple-400" />
+                        </div>
+                        <h2 className="text-xl font-bold text-slate-100">Recommendations</h2>
                       </div>
                     </div>
-                  )}
-
-                  
-
-                  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden dark:bg-dark-100 dark:border-dark-300 dark:shadow-dark-xl mt-6">
-                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 border-b border-gray-200 dark:from-dark-200 dark:to-dark-300 dark:border-dark-400">
-                      <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                        <Lightbulb className="w-5 h-5 mr-2 text-purple-600 dark:text-neon-purple-400" />
-                        Actionable Recommendations
-                      </h2>
-                    </div>
                     <div className="p-6">
-                      <ul className="space-y-3">
+                      <div className="space-y-3">
                         {scoreResult.recommendations.length > 0 ? (
                           scoreResult.recommendations.map((rec, index) => (
-                            <li key={index} className="flex items-start">
-                              <ArrowRight className="w-5 h-5 text-purple-500 dark:text-neon-purple-400 mr-3 mt-0.5 flex-shrink-0" />
-                              <span className="text-gray-700 dark:text-gray-300">{rec}</span>
-                            </li>
+                            <motion.div 
+                              key={index}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
+                              className="flex items-start gap-3 bg-slate-800/30 rounded-lg p-4 border border-slate-700/30"
+                            >
+                              <div className="p-1 rounded-full bg-purple-500/20 mt-0.5">
+                                <ArrowRight className="w-4 h-4 text-purple-400" />
+                              </div>
+                              <span className="text-slate-300 text-sm">{rec}</span>
+                            </motion.div>
                           ))
                         ) : (
-                          <p className="text-gray-600 dark:text-gray-300 italic">No specific recommendations at this time. Your resume looks great!</p>
+                          <p className="text-slate-400 italic text-center py-4">Your resume looks great! No specific recommendations.</p>
                         )}
-                      </ul>
+                      </div>
                     </div>
-                  </div>
+                  </motion.div>
 
-                  <div className="text-center space-y-4 bg-white rounded-2xl shadow-lg border border-gray-200 p-6 dark:bg-dark-100 dark:border-dark-300 dark:shadow-dark-xl mt-6">
-                   
+                  {/* CTA Section */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                    className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
+                  >
                     <button
                       onClick={handleCheckAnotherResume}
-                      className="bg-gradient-to-r from-neon-cyan-500 to-neon-blue-500 hover:from-neon-cyan-400 hover:to-neon-blue-400 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 mr-4 shadow-neon-cyan"
+                      className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-semibold rounded-xl hover:from-emerald-400 hover:to-cyan-400 transition-all duration-300 shadow-lg shadow-emerald-500/25 flex items-center gap-2"
                     >
                       Check Another Resume
+                      <ArrowRight className="w-4 h-4" />
                     </button>
                     <button
                       onClick={onNavigateBack}
-                      className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 dark:bg-dark-300 dark:hover:bg-dark-400"
+                      className="px-8 py-3 bg-slate-800 text-slate-200 font-semibold rounded-xl hover:bg-slate-700 transition-all duration-300 border border-slate-700"
                     >
                       Back to Home
                     </button>
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             )}

@@ -72,6 +72,8 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
   const [loadingWallet, setLoadingWallet] = useState<boolean>(true);
   const [showAddOns, setShowAddOns] = useState<boolean>(initialExpandAddons || false);
   const [selectedAddOns, setSelectedAddOns] = useState<{ [key: string]: number }>({});
+  const [dragStart, setDragStart] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
 
   const plans: SubscriptionPlan[] = paymentService.getPlans();
@@ -310,406 +312,531 @@ export const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-2 sm:p-4 backdrop-blur-sm dark:bg-black/80 flex flex-col">
-      <div className="bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl w-full max-w-7xl max-h-[95vh] overflow-y-auto flex flex-col dark:bg-dark-100 dark:shadow-dark-xl">
+    <div className="fixed inset-0 lg:left-16 bg-gradient-to-b from-slate-900 via-slate-950 to-[#070b14] flex items-start justify-center z-50 overflow-y-auto">
+      <div className="w-full max-w-4xl mx-auto px-4 py-8">
+        {/* Close Button */}
+        <button
+          onClick={onNavigateBack}
+          className="fixed top-4 right-4 lg:right-8 w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors rounded-full bg-slate-800/80 hover:bg-slate-700/80 backdrop-blur-sm z-50 border border-slate-700/50"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
         {/* Header Section */}
-        <div className="relative bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 px-3 sm:px-6 py-4 sm:py-8 border-b border-gray-100 flex-shrink-0 dark:from-dark-200 dark:via-dark-300 dark:to-dark-400 dark:border-dark-500">
-          <button
-            onClick={onNavigateBack}
-            className="absolute top-2 sm:top-4 left-2 sm:left-4 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-white/50 z-10 min-w-[44px] min-h-[44px] dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-dark-300/50"
-          >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-
-          <button
-            onClick={onNavigateBack}
-            className="absolute top-2 sm:top-4 right-2 sm:right-4 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-white/50 z-10 min-w-[44px] min-h-[44px] dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-dark-300/50"
-          >
-            <X className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-
-          <div className="text-center max-w-4xl mx-auto px-8">
-            <div className="bg-gradient-to-br from-neon-cyan-500 to-neon-purple-500 w-12 h-12 sm:w-20 sm:h-20 rounded-xl sm:rounded-3xl flex items-center justify-center mx-auto mb-3 sm:mb-6 shadow-lg dark:shadow-neon-cyan">
-              <Sparkles className="w-6 h-6 sm:w-10 h-10 text-white" />
-            </div>
-            <h1 className="text-lg sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3">
-              {currentStep === 0 ? 'Choose Your Success Plan' : 'Confirm Your Order'}
-            </h1>
-            <p className="text-sm sm:text-lg lg:text-xl text-gray-600 dark:text-gray-300 mb-3 sm:mb-6">
-              {currentStep === 0 ? 'Flexible pricing for every career stage.' : 'Review your selection and complete your purchase.'}
-            </p>
-            {/* Promo banner removed */}
-            <div />
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-400/30 mb-6">
+            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <span className="text-emerald-300 text-sm font-medium">Premium Plans</span>
           </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-100 mb-4">
+            {currentStep === 0 ? (
+              <>Choose Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Success Plan</span></>
+            ) : 'Confirm Your Order'}
+          </h1>
+          <p className="text-slate-400 text-lg max-w-xl mx-auto">
+            {currentStep === 0 ? 'Invest in your career with our flexible pricing options' : 'Review your selection and complete your purchase'}
+          </p>
         </div>
 
         {/* Main Content Area */}
-        <div className="p-3 sm:p-6 lg:p-8 overflow-y-auto flex-1 flex-grow">
-          {currentStep === 0 && (
-            <>
-              {/* Desktop Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6 mb-4 lg:mb-8">
-                {allPlansWithAddOnOption.map((plan) => (
-                  <motion.div
-                    key={plan.id}
-                    className={`relative rounded-xl lg:rounded-3xl border-2 transition-all duration-300 cursor-pointer ${
-                      selectedPlan === plan.id
-                        ? 'border-neon-cyan-500 shadow-2xl shadow-neon-cyan/20 ring-4 ring-neon-cyan-100 dark:border-neon-cyan-400 dark:ring-neon-cyan-400/30'
-                        : 'border-gray-200 hover:border-neon-cyan-300 hover:shadow-xl dark:border-dark-300 dark:hover:border-neon-cyan-400'
-                    } ${plan.popular ? 'ring-2 ring-green-500 ring-offset-4' : ''}`}
-                    whileHover={{ scale: 1.03 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                    onClick={() => {
-                      setSelectedPlan(plan.id);
-                      setCurrentStep(1);
-                    }}
-                  >
-                    {plan.popular && (
-                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                        <span
-                          className="inline-flex items-center bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 lg:px-4 py-1 lg:py-2 rounded-full text-xs lg:text-sm font-bold shadow-lg"
-                          style={{ fontSize: '10px', lineHeight: '1rem' }}
-                        >
-                          <span className="mr-1 text-sm">🏆</span> {plan.id === 'career_boost_plus' ? 'Most Popular' : 'Best Value'}
+        {currentStep === 0 && (
+          <>
+            {/* Desktop: Clean minimal cards like reference */}
+            <div className="hidden lg:grid lg:grid-cols-3 gap-0">
+              {allPlansWithAddOnOption.map((plan, index) => (
+                <motion.div
+                  key={plan.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  className={`relative bg-[#1a1d24] border-r border-slate-800 last:border-r-0 flex flex-col ${
+                    index === 0 ? 'rounded-l-2xl' : ''
+                  } ${index === allPlansWithAddOnOption.length - 1 ? 'rounded-r-2xl' : ''}`}
+                >
+                  {/* Header Section */}
+                  <div className="p-6 pb-4">
+                    {/* Plan Name & Popular Badge */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <h3 className="text-lg font-semibold text-slate-100">{plan.name}</h3>
+                      {plan.popular && (
+                        <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-full border border-emerald-500/30">
+                          POPULAR
                         </span>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
-                    {/* ✅ NEW: Diwali Badge for Eligible Plans */}
-                    {isDiwaliEligiblePlan(plan.id) && (
-                      <div className="absolute top-0 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-bl-xl rounded-tr-xl text-xs font-bold flex items-center space-x-1 shadow-lg z-10">
-                        <Gift className="w-3 h-3" />
-                        <span>🪔 DIWALI 90% OFF</span>
-                      </div>
-                    )}
+                    {/* Price */}
+                    <div className="flex items-baseline gap-1 mb-1">
+                      <span className="text-4xl font-bold text-slate-100">₹{plan.price}</span>
+                      <span className="text-slate-500 text-sm">one-time</span>
+                    </div>
+                    <p className="text-slate-500 text-sm mb-6">{plan.optimizations} credits included</p>
 
-                    <div className="p-3 lg:p-6">
-                      <div className="text-center mb-3 lg:mb-6">
-                        <h3 className="text-sm lg:text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 break-words">{plan.name}</h3>
-                        <div className="flex flex-col items-center mb-2">
-                          <span className="text-sm text-red-500 line-through">₹{plan.mrp}</span>
-                          <div className="flex items-center">
-                            <span className="text-xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100">₹{plan.price}</span>
-                            <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">
-                              {plan.discountPercentage}% OFF
-                            </span>
-                          </div>
-                          {/* ✅ NEW: Show additional Diwali discount preview */}
-                          {isDiwaliEligiblePlan(plan.id) && (
-                            <div className="mt-2 bg-orange-100 text-orange-800 px-3 py-1 rounded-lg text-xs font-bold">
-                              With DIWALI: ₹{Math.floor(plan.price * 0.1)} only! 🎉
-                            </div>
-                          )}
+                    {/* CTA Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPlan(plan.id);
+                        setCurrentStep(1);
+                      }}
+                      className={`w-full py-3 rounded-lg font-medium transition-all duration-200 ${
+                        plan.popular
+                          ? 'bg-emerald-500 text-white hover:bg-emerald-400'
+                          : 'bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700'
+                      }`}
+                    >
+                      {plan.popular ? 'Get Started' : 'Select Plan'}
+                    </button>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-slate-800 mx-6" />
+
+                  {/* Features Section */}
+                  <div className="p-6 pt-5 flex-1">
+                    <p className="text-slate-400 text-sm font-medium mb-4">You get:</p>
+                    <div className="space-y-3">
+                      {(plan.features || []).map((feature: string, fi: number) => (
+                        <div key={fi} className="flex items-start gap-3 text-sm">
+                          <Check className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                          <span className="text-slate-300">{feature.replace('✅ ', '').replace('❌ ', '')}</span>
                         </div>
-                        <p className="text-gray-600 dark:text-gray-300 text-sm">One-time purchase</p>
-                      </div>
-                      <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg lg:rounded-2xl p-2 lg:p-4 text-center mb-4">
-                        <div className="text-lg lg:text-2xl font-bold text-indigo-600">{plan.optimizations}</div>
-                        <div className="text-xs lg:text-sm text-gray-600">Resume Credits</div>
-                      </div>
-                      <ul className="space-y-1 lg:space-y-3 mb-3 lg:mb-6 max-h-32 lg:max-h-none overflow-y-auto lg:overflow-visible">
-                        {(plan.features || []).map((feature: string, fi: number) => (
-                          <li key={fi} className="flex items-start">
-                            <div className="w-5 h-5 lg:w-6 h-6 flex-shrink-0 mr-2 lg:mr-3 mt-0.5">
-                              {feature.startsWith('✅') ? (
-                                <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-0.5 rounded-full">
-                                  <Check className="w-4 h-4 lg:w-5 h-5 text-white" />
-                                </div>
-                              ) : (
-                                <div className="bg-gray-400 p-0.5 rounded-full">
-                                  <Check className="w-4 h-4 lg:w-5 h-5 text-white" />
-                                </div>
-                              )}
-                            </div>
-                            <span className="text-sm lg:text-base text-gray-700 break-words dark:text-gray-300">{feature.substring(feature.indexOf(' ') + 1)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <button
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Mobile/Tablet: Carousel with 1 card */}
+            <div className="lg:hidden relative">
+              {/* Carousel Container */}
+              <div 
+                className="overflow-hidden touch-pan-y" 
+                ref={carouselRef}
+                onTouchStart={(e) => {
+                  setDragStart(e.touches[0].clientX);
+                  setIsDragging(true);
+                }}
+                onTouchMove={() => {
+                  // Touch move handled in onTouchEnd
+                }}
+                onTouchEnd={(e) => {
+                  if (!isDragging || dragStart === null) return;
+                  const endX = e.changedTouches[0].clientX;
+                  const diff = dragStart - endX;
+                  const threshold = 50; // minimum swipe distance
+                  
+                  if (diff > threshold && currentSlide < allPlansWithAddOnOption.length - 1) {
+                    setCurrentSlide(prev => prev + 1);
+                  } else if (diff < -threshold && currentSlide > 0) {
+                    setCurrentSlide(prev => prev - 1);
+                  }
+                  
+                  setDragStart(null);
+                  setIsDragging(false);
+                }}
+                onMouseDown={(e) => {
+                  setDragStart(e.clientX);
+                  setIsDragging(true);
+                }}
+                onMouseMove={() => {
+                  // Mouse move handled in onMouseUp
+                }}
+                onMouseUp={(e) => {
+                  if (!isDragging || dragStart === null) return;
+                  const diff = dragStart - e.clientX;
+                  const threshold = 50;
+                  
+                  if (diff > threshold && currentSlide < allPlansWithAddOnOption.length - 1) {
+                    setCurrentSlide(prev => prev + 1);
+                  } else if (diff < -threshold && currentSlide > 0) {
+                    setCurrentSlide(prev => prev - 1);
+                  }
+                  
+                  setDragStart(null);
+                  setIsDragging(false);
+                }}
+                onMouseLeave={() => {
+                  setDragStart(null);
+                  setIsDragging(false);
+                }}
+              >
+                <motion.div
+                  className="flex cursor-grab active:cursor-grabbing"
+                  animate={{ x: `-${currentSlide * 100}%` }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                >
+                  {allPlansWithAddOnOption.map((plan, index) => (
+                    <div key={plan.id} className="w-full flex-shrink-0 px-2">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className={`relative rounded-2xl border transition-all duration-300 cursor-pointer overflow-hidden flex flex-col ${
+                          selectedPlan === plan.id
+                            ? 'border-emerald-400/60 bg-gradient-to-b from-emerald-500/15 to-cyan-500/10 shadow-[0_0_40px_rgba(16,185,129,0.25)]'
+                            : plan.popular
+                              ? 'border-emerald-400/40 bg-slate-900/80 shadow-lg'
+                              : 'border-slate-700/50 bg-slate-900/60'
+                        }`}
                         onClick={() => {
                           setSelectedPlan(plan.id);
                           setCurrentStep(1);
                         }}
-                        className={`w-full py-2 lg:py-3 px-2 lg:px-4 rounded-lg lg:rounded-xl font-semibold transition-all duration-300 text-sm lg:text-base min-h-[44px] mt-2 ${
-                          selectedPlan === plan.id
-                            ? `bg-gradient-to-r ${plan.gradient || ''} text-white shadow-lg transform scale-105`
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
                       >
-                        {selectedPlan === plan.id ? (
-                          <span className="flex items-center justify-center">
-                            <Check className="w-3 h-3 lg:w-5 h-5 mr-1 lg:mr-2" />
-                            Selected
-                          </span>
-                        ) : (
-                          'Buy Now'
+                        {/* Popular Badge */}
+                        {plan.popular && (
+                          <div className="absolute -top-0 left-1/2 -translate-x-1/2 z-10">
+                            <div className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-4 py-1.5 rounded-b-xl text-xs font-bold flex items-center gap-1.5 shadow-lg">
+                              <Crown className="w-3.5 h-3.5" />
+                              Best Value
+                            </div>
+                          </div>
                         )}
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </>
-          )}
 
-          {currentStep === 1 && (
-            <>
-              <div className="mb-4">
-                <button
-                  onClick={() => setCurrentStep(0)}
-                  className="btn-secondary py-2 px-4 flex items-center space-x-2"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                  <span>Back to Plans</span>
-                </button>
-              </div>
+                        <div className="p-6 flex flex-col flex-1">
+                          {/* Plan Icon & Name */}
+                          <div className="text-center mb-6 pt-4">
+                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
+                              plan.popular 
+                                ? 'bg-gradient-to-br from-emerald-500 to-cyan-500 shadow-lg shadow-emerald-500/30' 
+                                : 'bg-slate-800 border border-slate-700'
+                            }`}>
+                              {index === 0 ? <Rocket className="w-8 h-8 text-white" /> : 
+                               index === 1 ? <Target className="w-8 h-8 text-white" /> : 
+                               <Zap className="w-8 h-8 text-white" />}
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-100">{plan.name}</h3>
+                          </div>
 
-              {/* Add-ons Section */}
-              <div className="mb-4 lg:mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
-                    <Plus className="w-5 h-5 mr-2 text-purple-600 dark:text-neon-purple-400" />
-                    Add-ons
-                  </h2>
-                  <button
-                    onClick={() => setShowAddOns(!showAddOns)}
-                    className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center space-x-1 dark:text-neon-cyan-400 dark:hover:text-neon-cyan-300"
-                  >
-                    <span>{showAddOns ? 'Hide' : 'Show'} Add-ons</span>
-                    {showAddOns ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </button>
-                </div>
-                {showAddOns && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fadeIn">
-                    {addOns.map((addOn) => (
-                      <div key={addOn.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200 dark:bg-dark-200 dark:border-dark-300">
-                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">{addOn.name}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">₹{addOn.price}</p>
-                        <div className="flex items-center space-x-2">
+                          {/* Price */}
+                          <div className="text-center mb-6">
+                            <div className="flex items-center justify-center gap-2 mb-1">
+                              <span className="text-slate-500 line-through text-sm">₹{plan.mrp}</span>
+                              <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-xs font-bold">
+                                {plan.discountPercentage}% OFF
+                              </span>
+                            </div>
+                            <div className="text-4xl font-bold text-slate-100">₹{plan.price}</div>
+                            <p className="text-slate-400 text-sm mt-1">One-time purchase</p>
+                          </div>
+
+                          {/* Credits Badge */}
+                          <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-400/30 rounded-xl px-4 py-3 text-center mb-6">
+                            <div className="text-3xl font-bold text-indigo-300">{plan.optimizations}</div>
+                            <div className="text-sm text-indigo-400">Resume Credits</div>
+                          </div>
+
+                          {/* Features */}
+                          <div className="space-y-3 mb-6 flex-1">
+                            {(plan.features || []).slice(0, 5).map((feature: string, fi: number) => (
+                              <div key={fi} className="flex items-center gap-2 text-sm text-slate-300">
+                                <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                                <span>{feature.replace('✅ ', '').replace('❌ ', '')}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* CTA Button */}
                           <button
-                            onClick={() => handleAddOnQuantityChange(addOn.id, (selectedAddOns[addOn.id] || 0) - 1)}
-                            disabled={(selectedAddOns[addOn.id] || 0) === 0}
-                            className="btn-secondary p-2 rounded-full min-w-[32px] min-h-[32px] flex items-center justify-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedPlan(plan.id);
+                              setCurrentStep(1);
+                            }}
+                            className={`w-full py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+                              plan.popular
+                                ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-white hover:from-emerald-400 hover:to-cyan-400 shadow-lg shadow-emerald-500/25'
+                                : 'bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700'
+                            }`}
                           >
-                            -
-                          </button>
-                          <span className="font-bold text-lg text-gray-900 dark:text-gray-100">
-                            {selectedAddOns[addOn.id] || 0}
-                          </span>
-                          <button
-                            onClick={() => handleAddOnQuantityChange(addOn.id, (selectedAddOns[addOn.id] || 0) + 1)}
-                            className="btn-secondary p-2 rounded-full min-w-[32px] min-h-[32px] flex items-center justify-center"
-                          >
-                            +
+                            Get Started
+                            <ArrowRight className="w-4 h-4" />
                           </button>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+
+                        {/* Selection Indicator */}
+                        {selectedPlan === plan.id && (
+                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-cyan-500" />
+                        )}
+                      </motion.div>
+                    </div>
+                  ))}
+                </motion.div>
               </div>
 
-              {/* Coupon Code Section */}
-              <div className="mb-4 lg:mb-8">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                  <Tag className="w-5 h-5 mr-2 text-orange-600 dark:text-orange-400" />
-                  Apply Coupon Code
-                </h2>
-                {/* ✅ NEW: Diwali Coupon Highlight */}
-                {isDiwaliEligiblePlan(selectedPlan || '') && !appliedCoupon && (
-                  <div className="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-xl p-4 mb-4 dark:from-orange-900/20 dark:to-red-900/20">
-                    <div className="flex items-center space-x-2">
-                      <Gift className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                      <div>
-                        <p className="text-orange-800 dark:text-orange-300 font-bold text-lg">🪔 Diwali Special!</p>
-                        <p className="text-orange-700 dark:text-orange-400 text-sm">
-                          Use code <span className="font-bold bg-orange-600 text-white px-2 py-0.5 rounded">DIWALI</span> to get 90% OFF!
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    placeholder="Enter coupon code"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    className="input-base flex-1"
-                    disabled={!!appliedCoupon}
-                  />
-                  {!appliedCoupon ? (
-                    <button
-                      onClick={handleApplyCoupon}
-                      className="btn-primary px-4 py-2"
-                      disabled={!couponCode.trim()}
-                    >
-                      Apply
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleRemoveCoupon}
-                      className="btn-secondary px-4 py-2"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-                {couponError && (
-                  <p className="text-red-600 text-sm mt-2 flex items-center">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {couponError}
-                  </p>
-                )}
-                {/* ✅ UPDATED: Enhanced success message for coupons */}
-                {appliedCoupon && (
-                  <div className={`${
-                    appliedCoupon.code.toLowerCase() === 'diwali' 
-                      ? 'bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-500' 
-                      : 'bg-green-50 border-2 border-green-500'
-                  } rounded-xl p-4 mt-2 dark:from-orange-900/20 dark:to-red-900/20`}>
-                    <p className={`${
-                      appliedCoupon.code.toLowerCase() === 'diwali'
-                        ? 'text-orange-700 dark:text-orange-300'
-                        : 'text-green-700 dark:text-green-300'
-                    } font-semibold flex items-center text-lg`}>
-                      <CheckCircle className="w-5 h-5 mr-2" />
-                      {appliedCoupon.code.toUpperCase() === 'DIWALI' && '🪔 '}
-                      Coupon "{appliedCoupon.code.toUpperCase()}" applied successfully!
-                    </p>
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">You saved:</span>
-                      <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        ₹{(appliedCoupon.discount / 100).toFixed(2)}
-                      </span>
-                    </div>
-                    {appliedCoupon.code.toUpperCase() === 'DIWALI' && (
-                      <div className="mt-3 bg-white/50 rounded-lg p-3 dark:bg-white/10">
-                        <p className="text-orange-600 dark:text-orange-400 font-bold flex items-center">
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          Amazing! You just saved 90% with our Diwali offer! 🎉
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          Original Price: ₹{((appliedCoupon.finalAmount + appliedCoupon.discount) / 100).toFixed(2)}
-                        </p>
-                        <p className="text-sm font-bold text-orange-600 dark:text-orange-400">
-                          Final Price: ₹{(appliedCoupon.finalAmount / 100).toFixed(2)} (90% OFF!)
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              {/* Carousel Navigation Arrows */}
+              <button
+                onClick={prevSlide}
+                disabled={currentSlide === 0}
+                className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-xl z-10 ${
+                  currentSlide === 0 
+                    ? 'bg-slate-800/50 border border-slate-700/50 text-slate-600 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-emerald-500/90 to-cyan-500/90 border border-emerald-400/50 text-white hover:from-emerald-400 hover:to-cyan-400 hover:scale-110'
+                }`}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                onClick={nextSlide}
+                disabled={currentSlide === allPlansWithAddOnOption.length - 1}
+                className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-xl z-10 ${
+                  currentSlide === allPlansWithAddOnOption.length - 1 
+                    ? 'bg-slate-800/50 border border-slate-700/50 text-slate-600 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-emerald-500/90 to-cyan-500/90 border border-emerald-400/50 text-white hover:from-emerald-400 hover:to-cyan-400 hover:scale-110'
+                }`}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
 
-              {/* Wallet Balance Section */}
-              <div className="mb-4 lg:mb-8">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                  <Wallet className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
-                  Wallet Balance
-                </h2>
-                {loadingWallet ? (
-                  <div className="text-gray-600 dark:text-gray-300">Loading wallet...</div>
-                ) : (
-                  <div className="flex items-center space-x-3">
-                    <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      ₹{(walletBalance / 100).toFixed(2)}
-                    </span>
-                    {walletBalance > 0 && (
-                      <label className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={useWalletBalance}
-                          onChange={(e) => setUseWalletBalance(e.target.checked)}
-                          className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
+              {/* Swipe Hint */}
+              <motion.div 
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 0 }}
+                transition={{ delay: 3, duration: 1 }}
+                className="text-center mt-4 text-slate-500 text-sm flex items-center justify-center gap-2"
+              >
+                <ChevronLeft className="w-4 h-4 animate-pulse" />
+                <span>Swipe to explore plans</span>
+                <ChevronRight className="w-4 h-4 animate-pulse" />
+              </motion.div>
+
+              {/* Carousel Dots & Progress */}
+              <div className="flex flex-col items-center gap-3 mt-4">
+                <div className="flex justify-center gap-3">
+                  {allPlansWithAddOnOption.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => goToSlide(index)}
+                      className={`relative transition-all duration-300 ${
+                        currentSlide === index
+                          ? 'w-10 h-3 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 shadow-lg shadow-emerald-500/30'
+                          : 'w-3 h-3 rounded-full bg-slate-600 hover:bg-slate-500 hover:scale-125'
+                      }`}
+                    >
+                      {currentSlide === index && (
+                        <motion.div
+                          layoutId="activeDot"
+                          className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400"
                         />
-                        <span className="text-gray-700 dark:text-gray-300 text-sm">
-                          Use wallet balance
-                        </span>
-                      </label>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Order Summary */}
-              <div className="bg-gray-50 rounded-xl p-4 lg:p-6 border border-gray-200 dark:bg-dark-200 dark:border-dark-300 mb-4 lg:mb-8">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                  <Info className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
-                  Order Summary
-                </h2>
-                <div className="space-y-2 text-gray-700 dark:text-gray-300">
-                  <div className="flex justify-between">
-                    <span>Plan Price:</span>
-                    <span>₹{(planPrice / 100).toFixed(2)}</span>
-                  </div>
-                  {Object.keys(selectedAddOns).length > 0 && (
-                    <div className="flex justify-between">
-                      <span>Add-ons:</span>
-                      <span>₹{(addOnsTotal / 100).toFixed(2)}</span>
-                    </div>
-                  )}
-                  {appliedCoupon && (
-                    <div className={`flex justify-between ${
-                      appliedCoupon.code.toLowerCase() === 'diwali' 
-                        ? 'text-orange-600 dark:text-orange-400 font-bold' 
-                        : 'text-green-600 dark:text-green-400'
-                    }`}>
-                      <span>
-                        {appliedCoupon.code.toUpperCase() === 'DIWALI' && '🪔 '}
-                        Coupon Discount:
-                      </span>
-                      <span>- ₹{(appliedCoupon.discount / 100).toFixed(2)}</span>
-                    </div>
-                  )}
-                  {useWalletBalance && walletDeduction > 0 && (
-                    <div className="flex justify-between text-red-600 dark:text-red-400">
-                      <span>Wallet Deduction:</span>
-                      <span>- ₹{(walletDeduction / 100).toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-bold text-lg text-gray-900 dark:text-gray-100 border-t border-gray-300 pt-2">
-                    <span>Grand Total:</span>
-                    <span className={appliedCoupon?.code.toLowerCase() === 'diwali' ? 'text-orange-600 dark:text-orange-400' : ''}>
-                      ₹{(grandTotal / 100).toFixed(2)}
-                    </span>
-                  </div>
-                  {/* ✅ NEW: Show savings summary for DIWALI */}
-                  {appliedCoupon?.code.toLowerCase() === 'diwali' && (
-                    <div className="bg-orange-100 dark:bg-orange-900/30 rounded-lg p-3 mt-3">
-                      <p className="text-sm text-orange-800 dark:text-orange-300 text-center font-semibold">
-                        🎉 You're saving ₹{(appliedCoupon.discount / 100).toFixed(2)} with Diwali offer! 🎉
-                      </p>
-                    </div>
-                  )}
+                      )}
+                    </button>
+                  ))}
                 </div>
+                <p className="text-slate-500 text-xs">
+                  {currentSlide + 1} of {allPlansWithAddOnOption.length} plans
+                </p>
               </div>
+            </div>
+          </>
+        )}
 
-              {/* Checkout Button */}
-              <div className="p-3 sm:p-6 lg:p-8 border-t border-gray-100 flex-shrink-0 bg-white dark:bg-dark-100 dark:border-dark-500">
+        {currentStep === 1 && (
+          <div className="space-y-6">
+            {/* Back Button */}
+            <button
+              onClick={() => setCurrentStep(0)}
+              className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              <span>Back to Plans</span>
+            </button>
+
+            {/* Add-ons Section */}
+            <div className="bg-slate-900/60 rounded-2xl border border-slate-700/50 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-slate-100 flex items-center">
+                  <Plus className="w-5 h-5 mr-2 text-purple-400" />
+                  Add-ons
+                </h2>
                 <button
-                  onClick={handlePayment}
-                  disabled={isProcessing}
-                  className={`w-full py-3 sm:py-4 flex items-center justify-center text-lg sm:text-xl font-semibold rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 ${
-                    appliedCoupon?.code.toLowerCase() === 'diwali'
-                      ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white'
-                      : 'btn-primary'
-                  }`}
+                  onClick={() => setShowAddOns(!showAddOns)}
+                  className="text-sm font-medium text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
                 >
-                  {isProcessing ? (
-                    <span className="flex items-center">
-                      <Clock className="w-5 h-5 mr-2 animate-spin" /> Processing...
-                    </span>
-                  ) : (
-                    <span className="flex items-center">
-                      {appliedCoupon?.code.toLowerCase() === 'diwali' && '🪔 '}
-                      Proceed to Checkout <ArrowRight className="w-5 h-5 ml-2" />
-                    </span>
-                  )}
+                  <span>{showAddOns ? 'Hide' : 'Show'} Add-ons</span>
+                  {showAddOns ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
               </div>
-            </>
-          )}
-        </div>
+              {showAddOns && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {addOns.map((addOn) => (
+                    <div key={addOn.id} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                      <h3 className="font-semibold text-slate-100 mb-1">{addOn.name}</h3>
+                      <p className="text-sm text-slate-400 mb-3">₹{addOn.price}</p>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleAddOnQuantityChange(addOn.id, (selectedAddOns[addOn.id] || 0) - 1)}
+                          disabled={(selectedAddOns[addOn.id] || 0) === 0}
+                          className="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 flex items-center justify-center disabled:opacity-50"
+                        >
+                          -
+                        </button>
+                        <span className="font-bold text-lg text-slate-100 w-8 text-center">
+                          {selectedAddOns[addOn.id] || 0}
+                        </span>
+                        <button
+                          onClick={() => handleAddOnQuantityChange(addOn.id, (selectedAddOns[addOn.id] || 0) + 1)}
+                          className="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 flex items-center justify-center"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Coupon Code Section */}
+            <div className="bg-slate-900/60 rounded-2xl border border-slate-700/50 p-6">
+              <h2 className="text-lg font-bold text-slate-100 mb-4 flex items-center">
+                <Tag className="w-5 h-5 mr-2 text-amber-400" />
+                Apply Coupon Code
+              </h2>
+              {isDiwaliEligiblePlan(selectedPlan || '') && !appliedCoupon && (
+                <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-400/30 rounded-xl p-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <Gift className="w-6 h-6 text-amber-400" />
+                    <div>
+                      <p className="text-amber-300 font-bold">🪔 Diwali Special!</p>
+                      <p className="text-amber-400/80 text-sm">
+                        Use code <span className="font-bold bg-amber-500 text-white px-2 py-0.5 rounded">DIWALI</span> to get 90% OFF!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  placeholder="Enter coupon code"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  className="flex-1 px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-400/50"
+                  disabled={!!appliedCoupon}
+                />
+                {!appliedCoupon ? (
+                  <button
+                    onClick={handleApplyCoupon}
+                    className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-xl font-semibold hover:from-emerald-400 hover:to-cyan-400 disabled:opacity-50"
+                    disabled={!couponCode.trim()}
+                  >
+                    Apply
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleRemoveCoupon}
+                    className="px-6 py-3 bg-slate-700 text-slate-200 rounded-xl font-semibold hover:bg-slate-600"
+                  >
+                    Remove
+                    </button>
+                  )}
+                </div>
+              {couponError && (
+                <p className="text-red-400 text-sm mt-2 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {couponError}
+                </p>
+              )}
+              {appliedCoupon && (
+                <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-4 mt-3">
+                  <p className="text-emerald-300 font-semibold flex items-center">
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                    Coupon "{appliedCoupon.code.toUpperCase()}" applied!
+                  </p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-slate-400">You saved:</span>
+                    <span className="text-xl font-bold text-emerald-400">
+                      ₹{(appliedCoupon.discount / 100).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Wallet Balance Section */}
+            <div className="bg-slate-900/60 rounded-2xl border border-slate-700/50 p-6">
+              <h2 className="text-lg font-bold text-slate-100 mb-4 flex items-center">
+                <Wallet className="w-5 h-5 mr-2 text-emerald-400" />
+                Wallet Balance
+              </h2>
+              {loadingWallet ? (
+                <div className="text-slate-400">Loading wallet...</div>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <span className="text-2xl font-bold text-slate-100">
+                    ₹{(walletBalance / 100).toFixed(2)}
+                  </span>
+                  {walletBalance > 0 && (
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={useWalletBalance}
+                        onChange={(e) => setUseWalletBalance(e.target.checked)}
+                        className="form-checkbox h-5 w-5 text-emerald-500 rounded bg-slate-800 border-slate-600 focus:ring-emerald-500"
+                      />
+                      <span className="text-slate-300 text-sm">Use wallet balance</span>
+                    </label>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Order Summary */}
+            <div className="bg-slate-900/60 rounded-2xl border border-slate-700/50 p-6">
+              <h2 className="text-lg font-bold text-slate-100 mb-4 flex items-center">
+                <Info className="w-5 h-5 mr-2 text-blue-400" />
+                Order Summary
+              </h2>
+              <div className="space-y-3 text-slate-300">
+                <div className="flex justify-between">
+                  <span>Plan Price:</span>
+                  <span>₹{(planPrice / 100).toFixed(2)}</span>
+                </div>
+                {Object.keys(selectedAddOns).length > 0 && (
+                  <div className="flex justify-between">
+                    <span>Add-ons:</span>
+                    <span>₹{(addOnsTotal / 100).toFixed(2)}</span>
+                  </div>
+                )}
+                {appliedCoupon && (
+                  <div className="flex justify-between text-emerald-400">
+                    <span>Coupon Discount:</span>
+                    <span>- ₹{(appliedCoupon.discount / 100).toFixed(2)}</span>
+                  </div>
+                )}
+                {useWalletBalance && walletDeduction > 0 && (
+                  <div className="flex justify-between text-amber-400">
+                    <span>Wallet Deduction:</span>
+                    <span>- ₹{(walletDeduction / 100).toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold text-xl text-slate-100 border-t border-slate-700 pt-3 mt-3">
+                  <span>Grand Total:</span>
+                  <span className="text-emerald-400">₹{(grandTotal / 100).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Checkout Button */}
+            <button
+              onClick={handlePayment}
+              disabled={isProcessing}
+              className="w-full py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-lg font-semibold rounded-xl hover:from-emerald-400 hover:to-cyan-400 shadow-lg shadow-emerald-500/25 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isProcessing ? (
+                <>
+                  <Clock className="w-5 h-5 animate-spin" /> Processing...
+                </>
+              ) : (
+                <>
+                  Proceed to Checkout <ArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
